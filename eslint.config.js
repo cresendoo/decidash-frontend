@@ -10,7 +10,7 @@ import prettier from 'eslint-config-prettier'
 
 export default tseslint.config([
   {
-    ignores: ['dist', 'node_modules', 'coverage', '.husky']
+    ignores: ['dist', 'node_modules', 'coverage', '.husky'],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -21,7 +21,6 @@ export default tseslint.config([
     },
     plugins: {
       react,
-      'react-hooks': reactHooks,
       'jsx-a11y': a11y,
       import: importPlugin,
       'simple-import-sort': simpleImportSort,
@@ -31,9 +30,9 @@ export default tseslint.config([
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: ['./tsconfig.app.json']
-        }
-      }
+          project: ['./tsconfig.app.json'],
+        },
+      },
     },
     extends: [
       js.configs.recommended,
@@ -49,7 +48,7 @@ export default tseslint.config([
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'import/order': 'off',
-      'import/no-unresolved': 'off'
-    }
-  }
+      'import/no-unresolved': 'off',
+    },
+  },
 ])
