@@ -1,40 +1,29 @@
+import { Outlet } from 'react-router-dom'
+
 export default function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-center text-2xl font-bold tracking-tight text-gray-900">
-          React + TypeScript + TailwindCSS
-        </h1>
-        <p className="mb-6 text-center text-gray-600">
-          Vite, ESLint, Prettier, Husky, alias('@')가 설정되었습니다.
-        </p>
-        <div className="flex justify-center gap-3">
-          <a
-            className="rounded-md bg-black px-4 py-2 text-white transition hover:bg-gray-800"
-            href="https://vite.dev"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Vite
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+          <a href="/" className="text-lg font-semibold tracking-tight">
+            Decidash
           </a>
-          <a
-            className="rounded-md bg-sky-600 px-4 py-2 text-white transition hover:bg-sky-500"
-            href="https://react.dev"
-            target="_blank"
-            rel="noreferrer"
-          >
-            React
-          </a>
-          <a
-            className="rounded-md bg-emerald-600 px-4 py-2 text-white transition hover:bg-emerald-500"
-            href="https://tailwindcss.com"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Tailwind
-          </a>
+          <nav className="flex items-center gap-4 text-sm text-gray-600">
+            <a href="/" className="hover:text-gray-900">
+              Home
+            </a>
+            <a href="/markets" className="hover:text-gray-900">
+              Markets
+            </a>
+            <a href="/traders" className="hover:text-gray-900">
+              Traders
+            </a>
+          </nav>
         </div>
-      </div>
-    </main>
+      </header>
+      <main className="mx-auto max-w-7xl px-4 py-6">
+        <Outlet />
+      </main>
+    </div>
   )
 }
