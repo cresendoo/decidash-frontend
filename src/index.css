@@ -3,12 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Design Primitives (Default / Dark theme) */
+    --bg-default: #0c0a09; /* stone-950 */
+    --bg-surface: #1c1917; /* stone-900 */
+    --bg-green: rgba(5, 46, 22, 0.5);
+    --bg-red: rgba(70, 8, 9, 0.5);
+    --bg-hint: rgba(255, 255, 255, 0.1);
+
+    --fg-default: #ffffff;
+    --fg-muted: rgba(255, 255, 255, 0.6);
+    --fg-hint: rgba(255, 255, 255, 0.4);
+    --fg-invert: #0c0a09; /* stone-950 */
+
+    --border-default: #292524; /* stone-800 */
+    --border-muted: rgba(255, 255, 255, 0.05);
+    --border-green: #016630; /* green-800 */
+    --border-red: #9f0712; /* red-800 */
+    --border-highlight: #ffffff;
+
+    --primary-default: #ede030;
+    --primary-hover: #f6eb61;
+
+    --secondary-default: #1c1917; /* stone-900 */
+    --secondary-hover: #292524; /* stone-800 */
+
+    --etc-green: #00c951; /* green-500 */
+    --etc-red: #fb2c36; /* red-500 */
+    /* derived */
+    --bg-surface-95: color-mix(in srgb, var(--bg-surface) 95%, transparent);
+  }
   html,
   body,
   #root {
     @apply h-full;
   }
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: var(--bg-default);
+    color: var(--fg-default);
+    @apply antialiased;
   }
 }
