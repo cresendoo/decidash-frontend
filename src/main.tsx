@@ -14,10 +14,7 @@ const queryClient = new QueryClient()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider
-        router={router}
-        fallbackElement={<div className="p-4 text-sm text-gray-500">Loading...</div>}
-      />
+      <RouterProvider router={router} />
     </QueryClientProvider>
   </StrictMode>,
 )

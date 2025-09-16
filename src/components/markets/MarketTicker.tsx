@@ -19,7 +19,7 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    const { session, connect, disconnect, subscribeMarketPrice } = createWsSession(
+    const { connect, disconnect, subscribeMarketPrice } = createWsSession(
       DeciDashConfig.DEVNET,
     )
 
