@@ -1,5 +1,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
+import { DeciDashConfig, MARKET_LIST } from '@coldbell/decidash-ts-sdk'
+
 export interface RequestOptions {
   method?: HttpMethod
   headers?: Record<string, string>
@@ -22,4 +24,23 @@ export async function http<T>(url: string, options: RequestOptions = {}): Promis
     throw new Error(text || `Request failed: ${res.status}`)
   }
   return (await res.json()) as T
+}
+
+// DeciDash SDK helpers
+
+export function createDeciDashConfig(overrides: Partial<DeciDashConfig> = {}): DeciDashConfig {
+  return {
+    ...DeciDashConfig.DEVNET,
+    ...overrides,
+    tradingVM: { ...DeciDashConfig.DEVNET.tradingVM, ...overrides.tradingVM },
+    node: { ...DeciDashConfig.DEVNET.node, ...overrides.node },
+    fetchFn: overrides.fetchFn ?? fetch,
+    WebSocketCtor: overrides.WebSocketCtor ?? undefined,
+  }
+}
+
+export function getMarketIdBySymbol(symbol: string): string {
+  const id = MARKET_LIST[symbol]
+  if (!id) throw new Error(`Unknown market symbol: ${symbol}`)
+  return id
 }
