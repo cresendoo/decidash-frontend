@@ -1,23 +1,47 @@
-import { useEffect, useMemo, useState } from 'react'
 import {
   DeciDashConfig,
-  MARKET_LIST,
   type WebsocketResponseMarketPrice,
 } from '@coldbell/decidash-ts-sdk'
-import { createWsSession } from '@/shared/api/decidashWs'
+import { useEffect, useMemo, useState } from 'react'
+
+import { getMarketIdBySymbol } from '@/shared/api/client'
 import { createDecidashQueries } from '@/shared/api/decidashHooks'
+import { createWsSession } from '@/shared/api/decidash-websocket'
 
 type Props = {
-  symbol?: keyof typeof MARKET_LIST
+  symbol?: string
 }
 
 export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
-  const marketId = MARKET_LIST[symbol]
+  const [marketId, setMarketId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const [live, setLive] = useState<WebsocketResponseMarketPrice['price'] | null>(null)
   const queries = useMemo(() => createDecidashQueries({ config: DeciDashConfig.DEVNET }), [])
-  const { data } = queries.useMarketPrice(marketId)
+
+  // 마켓 ID 가져오기
+  useEffect(() => {
+    const fetchMarketId = async () => {
+      try {
+        setLoading(true)
+        const id = await getMarketIdBySymbol(symbol)
+        setMarketId(id)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch market ID')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (symbol) {
+      fetchMarketId()
+    }
+  }, [symbol])
+
+  const { data } = queries.useMarketPrice(marketId || '')
 
   useEffect(() => {
+    if (loading || !marketId) return
+
     let cancelled = false
     const { connect, disconnect, subscribeMarketPrice } = createWsSession(
       DeciDashConfig.DEVNET,
@@ -31,8 +55,9 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
           if (cancelled) break
           setLive(msg.price)
         }
-      } catch (e) {
-        // swallow for UI
+      } catch (error) {
+        // ignore error
+        console.warn('Market ticker WebSocket error:', error)
       }
     }
 
@@ -44,10 +69,13 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
           marketId,
         ) as unknown as ReadableStream<WebsocketResponseMarketPrice>
         s.cancel?.().catch(() => {})
-      } catch {}
+      } catch (error) {
+        // ignore cancel error
+        console.warn('Market ticker cancel error:', error)
+      }
       disconnect()
     }
-  }, [marketId])
+  }, [marketId, loading])
 
   const latest = live ?? (data && data[0]) ?? null
 

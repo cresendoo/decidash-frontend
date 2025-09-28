@@ -1,16 +1,44 @@
-import { MARKET_LIST } from '@coldbell/decidash-ts-sdk'
-import { createDecidashQueries } from '@/shared/api/decidashHooks'
-import { useMemo } from 'react'
+import { useEffect,useMemo, useState } from 'react'
 
-type Props = { symbol?: keyof typeof MARKET_LIST; limit?: number }
+import { getMarketIdBySymbol } from '@/shared/api/client'
+import { createDecidashQueries } from '@/shared/api/decidashHooks'
+
+type Props = { symbol?: string; limit?: number }
 
 export default function MarketTrades({ symbol = 'APT/USD', limit = 24 }: Props) {
-  const marketId = MARKET_LIST[symbol]
-  const { useMarketTradeHistory } = useMemo(() => createDecidashQueries({}), [])
-  const { data, isLoading, error } = useMarketTradeHistory(marketId, limit)
+  const [marketId, setMarketId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (isLoading) return <div className="text-gray-900">체결 로딩...</div>
-  if (error) return <div className="text-red-600">에러: {(error as Error).message}</div>
+  // 마켓 ID 가져오기
+  useEffect(() => {
+    const fetchMarketId = async () => {
+      try {
+        setLoading(true)
+        const id = await getMarketIdBySymbol(symbol)
+        setMarketId(id)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch market ID')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (symbol) {
+      fetchMarketId()
+    }
+  }, [symbol])
+
+  const { useMarketTradeHistory } = useMemo(() => createDecidashQueries({}), [])
+  const { data } = useMarketTradeHistory(marketId || '', limit)
+
+  if (loading || !marketId) {
+    return <div className="text-gray-900">체결 로딩...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-600">에러: {error}</div>
+  }
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 shadow-sm">

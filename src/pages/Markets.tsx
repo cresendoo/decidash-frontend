@@ -1,19 +1,44 @@
-import { MARKET_LIST } from '@coldbell/decidash-ts-sdk'
-import { useMemo } from 'react'
+import { useEffect,useMemo, useState } from 'react'
 
-import MarketCandleChart from '@/components/markets/MarketCandleChart'
+// MarketCandleChart는 traders 전용으로 이동했습니다
 import MarketCandles from '@/components/markets/MarketCandles'
 import MarketTicker from '@/components/markets/MarketTicker'
 import MarketTrades from '@/components/markets/MarketTrades'
+import { getMarketIdBySymbol } from '@/shared/api/client'
 import { createDecidashQueries } from '@/shared/api/decidashHooks'
 
 export default function Markets() {
-  const marketId = MARKET_LIST['APT/USD']
-  const { useMarketPrice } = useMemo(() => createDecidashQueries({}), [])
-  const { data, isLoading, error } = useMarketPrice(marketId)
+  const [marketId, setMarketId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (isLoading) return <div className="text-gray-900">로딩 중...</div>
-  if (error) return <div className="text-red-600">에러: {(error as Error).message}</div>
+  // 컴포넌트 마운트 시 마켓 ID 가져오기
+  useEffect(() => {
+    const fetchMarketId = async () => {
+      try {
+        setLoading(true)
+        const id = await getMarketIdBySymbol('APT/USD')
+        setMarketId(id)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch market ID')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMarketId()
+  }, [])
+
+  const { useMarketPrice } = useMemo(() => createDecidashQueries({}), [])
+  const { data } = useMarketPrice(marketId || '')
+
+  if (loading || !marketId) {
+    return <div className="text-gray-900">마켓 정보를 로딩 중...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-600">에러: {error}</div>
+  }
 
   return (
     <div className="space-y-6 text-gray-900">
@@ -23,7 +48,7 @@ export default function Markets() {
         </div>
         <div className="md:col-span-2">
           <div className="space-y-6">
-            <MarketCandleChart symbol="APT/USD" interval="1m" minutes={180} />
+            {/* 차트 컴포넌트는 traders로 이동됨 */}
             <MarketCandles symbol="APT/USD" interval="1m" minutes={120} />
           </div>
         </div>

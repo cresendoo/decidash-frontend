@@ -1,13 +1,14 @@
 import {
-  MARKET_LIST,
   type MarketCandlesticks,
   type MarketCandlesticksInterval,
 } from '@coldbell/decidash-ts-sdk'
+import { useEffect,useMemo, useState } from 'react'
+
+import { getMarketIdBySymbol } from '@/shared/api/client'
 import { createDecidashQueries } from '@/shared/api/decidashHooks'
-import { useMemo } from 'react'
 
 type Props = {
-  symbol?: keyof typeof MARKET_LIST
+  symbol?: string
   interval?: MarketCandlesticksInterval
   minutes?: number
 }
@@ -17,21 +18,48 @@ export default function MarketCandles({
   interval = '1m',
   minutes = 60,
 }: Props) {
-  const marketId = MARKET_LIST[symbol]
+  const [marketId, setMarketId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 마켓 ID 가져오기
+  useEffect(() => {
+    const fetchMarketId = async () => {
+      try {
+        setLoading(true)
+        const id = await getMarketIdBySymbol(symbol)
+        setMarketId(id)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch market ID')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (symbol) {
+      fetchMarketId()
+    }
+  }, [symbol])
+
   const { startTime, endTime } = useMemo(() => {
     const end = Date.now()
     return { startTime: end - minutes * 60_000, endTime: end }
-  }, [minutes, interval])
+  }, [minutes])
   const { useMarketCandlesticks } = useMemo(() => createDecidashQueries({}), [])
-  const { data, isLoading, error } = useMarketCandlesticks({
-    market: marketId,
+  const { data } = useMarketCandlesticks({
+    market: marketId || '',
     interval,
     startTime,
     endTime,
   })
 
-  if (isLoading) return <div className="text-gray-900">캔들 로딩...</div>
-  if (error) return <div className="text-red-600">에러: {(error as Error).message}</div>
+  if (loading || !marketId) {
+    return <div className="text-gray-900">캔들 로딩...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-600">에러: {error}</div>
+  }
 
   return (
     <div className="rounded border border-gray-200 bg-white p-4 shadow-sm">
