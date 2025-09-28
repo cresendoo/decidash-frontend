@@ -27,8 +27,9 @@ export function createDecidashQueries({ config = DeciDashConfig.DEVNET }: Create
       interval: MarketCandlesticksInterval
       startTime: number
       endTime: number
+      enabled?: boolean
     }) {
-      const { market, interval, startTime, endTime } = args
+      const { market, interval, startTime, endTime, enabled = true } = args
       return useQuery({
         queryKey: [
           'decidash',
@@ -42,6 +43,7 @@ export function createDecidashQueries({ config = DeciDashConfig.DEVNET }: Create
         queryFn: () =>
           getMarketCandlesticks({ decidashConfig: config, market, interval, startTime, endTime }),
         staleTime: 10_000,
+        enabled,
       }) as ReturnType<typeof useQuery<MarketCandlesticks[]>>
     },
 
