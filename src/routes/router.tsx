@@ -1,8 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 
 import App from '@/App'
-import AuthLayout from '@/shared/layout/AuthLayout'
-import EmbedLayout from '@/shared/layout/EmbedLayout'
 
 export const router = createBrowserRouter([
   {
