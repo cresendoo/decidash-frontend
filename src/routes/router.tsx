@@ -9,14 +9,14 @@ export const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, lazy: async () => ({ Component: (await import('@/pages/traders')).default }) },
+      { index: true, lazy: async () => ({ Component: (await import('../pages/traders')).default }) },
       {
         path: 'markets',
-        lazy: async () => ({ Component: (await import('@/pages/markets.tsx')).default }),
+        lazy: async () => ({ Component: (await import('../pages/markets')).default }),
       },
       {
         path: 'traders',
-        lazy: async () => ({ Component: (await import('@/pages/traders')).default }),
+        lazy: async () => ({ Component: (await import('../pages/traders')).default }),
       },
     ],
   },
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        lazy: async () => ({ Component: (await import('@/pages/auth/login.tsx')).default }),
+        lazy: async () => ({ Component: (await import('../pages/auth/login')).default }),
       },
     ],
   },
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        lazy: async () => ({ Component: (await import('@/pages/embed/chart-embed')).default }),
+        lazy: async () => ({ Component: (await import('../pages/embed/chart-embed')).default }),
       },
     ],
   },
