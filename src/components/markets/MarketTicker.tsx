@@ -16,6 +16,7 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
   const [marketId, setMarketId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [live, setLive] = useState<WebsocketResponseMarketPrice['price'] | null>(null)
+  const [_error, setError] = useState<string | null>(null)
   const queries = useMemo(() => createDecidashQueries({ config: DeciDashConfig.DEVNET }), [])
 
   // 마켓 ID 가져오기
@@ -40,7 +41,7 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
   const { data } = queries.useMarketPrice(marketId || '')
 
   useEffect(() => {
-    if (loading || !marketId) return
+    if (loading) return
 
     let cancelled = false
     const { connect, disconnect, subscribeMarketPrice } = createWsSession(
@@ -48,6 +49,7 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
     )
 
     async function run() {
+      if(!marketId) return;
       try {
         await connect()
         const stream = subscribeMarketPrice(marketId)
@@ -66,7 +68,7 @@ export default function MarketTicker({ symbol = 'APT/USD' }: Props) {
       cancelled = true
       try {
         const s = subscribeMarketPrice(
-          marketId,
+          marketId || '',
         ) as unknown as ReadableStream<WebsocketResponseMarketPrice>
         s.cancel?.().catch(() => {})
       } catch (error) {
