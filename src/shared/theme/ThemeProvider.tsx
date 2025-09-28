@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
+
 import { useAppStore } from '@/shared/store/appStore'
 
 export default function ThemeProvider({ children }: { children: ReactNode }) {

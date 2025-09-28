@@ -1,23 +1,20 @@
 import { Outlet } from 'react-router-dom'
 
-import Header from './Header'
 import ThemeProvider from '@/shared/theme/ThemeProvider'
-import Sidebar from './Sidebar'
+
+import Header from './Header'
 
 export default function MainLayout() {
   return (
     <ThemeProvider>
       <div
-        className="min-h-screen"
+        className="h-screen flex flex-col"
         style={{ backgroundColor: 'var(--bg-default)', color: 'var(--fg-default)' }}
       >
         <Header />
-        <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6">
-          <Sidebar />
-          <main className="min-w-0 flex-1">
+          <main className="min-w-0 flex-1 min-h-0">
             <Outlet />
           </main>
-        </div>
       </div>
     </ThemeProvider>
   )
