@@ -295,40 +295,6 @@ export default {
           950: '#441306',
         },
         transparent: '#ffffff00',
-
-        // Design Primitives via CSS Variables (defined in src/index.css)
-        bg: {
-          default: 'var(--bg-default)',
-          surface: 'var(--bg-surface)',
-          green: 'var(--bg-green)',
-          red: 'var(--bg-red)',
-          hint: 'var(--bg-hint)',
-        },
-        fg: {
-          default: 'var(--fg-default)',
-          muted: 'var(--fg-muted)',
-          hint: 'var(--fg-hint)',
-          invert: 'var(--fg-invert)',
-        },
-        border: {
-          default: 'var(--border-default)',
-          muted: 'var(--border-muted)',
-          green: 'var(--border-green)',
-          red: 'var(--border-red)',
-          highlight: 'var(--border-highlight)',
-        },
-        primary: {
-          default: 'var(--primary-default)',
-          hover: 'var(--primary-hover)',
-        },
-        secondary: {
-          default: 'var(--secondary-default)',
-          hover: 'var(--secondary-hover)',
-        },
-        etc: {
-          green: 'var(--etc-green)',
-          red: 'var(--etc-red)',
-        },
       },
 
       // Font settings from Figma
