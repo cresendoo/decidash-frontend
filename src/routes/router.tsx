@@ -12,7 +12,7 @@ export const router = createBrowserRouter([
       { index: true, lazy: async () => ({ Component: (await import('@/pages/traders')).default }) },
       {
         path: 'markets',
-        lazy: async () => ({ Component: (await import('@/pages/markets')).default }),
+        lazy: async () => ({ Component: (await import('@/pages/markets.tsx')).default }),
       },
       {
         path: 'traders',
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        lazy: async () => ({ Component: (await import('@/pages/auth/login')).default }),
+        lazy: async () => ({ Component: (await import('@/pages/auth/login.tsx')).default }),
       },
     ],
   },
