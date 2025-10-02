@@ -1,13 +1,13 @@
 {
   "singleQuote": true,
   "semi": false,
-  "printWidth": 100,
+  "printWidth": 60,
   "trailingComma": "all",
   "plugins": ["prettier-plugin-tailwindcss"],
   "overrides": [
     {
       "files": ["*.json", "*.yml", "*.yaml"],
-      "options": { "printWidth": 120 }
+      "options": { "printWidth": 60 }
     }
   ]
 }

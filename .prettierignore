@@ -1,3 +1,9 @@
+dist
+node_modules
+coverage
+.husky
+*.log
+*.lock
 node_modules
 dist
 coverage
