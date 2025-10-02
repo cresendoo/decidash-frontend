@@ -1,5 +1,11 @@
 import type { UserPosition } from '@coldbell/decidash-ts-sdk'
 
+import {
+  Table,
+  TableCell,
+  TableRow,
+  type TableColumn,
+} from '@/shared/components'
 import { useWallet } from '@/shared/hooks'
 
 import { useUserPositions } from '../api'
@@ -54,122 +60,41 @@ function PositionsError({
   )
 }
 
-/**
- * 빈 데이터 컴포넌트
- */
-function PositionsEmpty() {
-  return (
-    <div className="rounded-[2px] bg-stone-950 px-0 py-2">
-      <div className="flex h-4 items-center gap-2 px-2">
-        <p className="flex-1 text-xs text-white">
-          No open positions yet
-        </p>
-      </div>
-    </div>
-  )
-}
-
-/**
- * 포지션 행 컴포넌트
- */
-function PositionRow({
-  position,
-}: {
-  position: UserPosition
-}) {
-  // 마켓 이름에서 코인 추출 (예: APT/USD -> APT)
-  const coin =
-    position.market.split('/')[0] || position.market
-
-  // PNL과 ROE 계산 (간단한 예시)
-  const pnl = 0 // TODO: 실제 계산 로직 필요
-  const roe = 0 // TODO: 실제 계산 로직 필요
-  const isProfitable = pnl >= 0
-
-  // Size 방향 (Long/Short)
-  const isLong = position.size > 0
-  const sizeDisplay = `${isLong ? '' : '-'}${Math.abs(position.size).toFixed(4)}`
-
-  return (
-    <div className="flex h-4 items-center gap-2 px-2 text-xs text-white">
-      {/* Coin */}
-      <div className="flex flex-1 items-center gap-1">
-        <span>{coin}</span>
-      </div>
-
-      {/* Size */}
-      <div className="flex flex-1 items-center">
-        <span
-          className={
-            isLong ? 'text-[#00c951]' : 'text-[#fb2c36]'
-          }
-        >
-          {sizeDisplay}
-        </span>
-      </div>
-
-      {/* Position Value */}
-      <div className="flex flex-1 items-center justify-end">
-        <span>
-          $
-          {(
-            Math.abs(position.size) * position.entry_price
-          ).toFixed(2)}
-        </span>
-      </div>
-
-      {/* Entry Price */}
-      <div className="flex flex-1 items-center justify-end">
-        <span>${position.entry_price.toFixed(2)}</span>
-      </div>
-
-      {/* Mark Price */}
-      <div className="flex flex-1 items-center justify-end">
-        <span>-</span>
-      </div>
-
-      {/* PNL (ROE %) */}
-      <div className="flex flex-1 items-center justify-end">
-        <span
-          className={
-            isProfitable
-              ? 'text-[#00c951]'
-              : 'text-[#fb2c36]'
-          }
-        >
-          ${pnl.toFixed(2)} ({roe.toFixed(2)}%)
-        </span>
-      </div>
-
-      {/* Liq. Price */}
-      <div className="flex flex-1 items-center justify-end">
-        <span>
-          ${position.estimated_liquidation_price.toFixed(2)}
-        </span>
-      </div>
-
-      {/* Margin */}
-      <div className="flex flex-1 items-center justify-end">
-        <span>
-          {position.is_isolated ? 'Isolated' : 'Cross'}
-        </span>
-      </div>
-
-      {/* Funding */}
-      <div className="flex flex-1 items-center justify-end">
-        <span
-          className={
-            position.unrealized_funding >= 0
-              ? 'text-[#00c951]'
-              : 'text-[#fb2c36]'
-          }
-        >
-          ${position.unrealized_funding.toFixed(4)}
-        </span>
-      </div>
-    </div>
-  )
-}
+// 테이블 컬럼 정의
+const columns: TableColumn[] = [
+  { key: 'coin', label: 'Coin', align: 'left' },
+  { key: 'size', label: 'Size', align: 'left' },
+  {
+    key: 'positionValue',
+    label: 'Position Value',
+    align: 'right',
+  },
+  {
+    key: 'entryPrice',
+    label: 'Entry Price',
+    align: 'right',
+  },
+  { key: 'markPrice', label: 'Mark Price', align: 'right' },
+  {
+    key: 'pnl',
+    label: 'PNL (ROE %)',
+    align: 'right',
+    underline: true,
+  },
+  { key: 'liqPrice', label: 'Liq. Price', align: 'right' },
+  {
+    key: 'margin',
+    label: 'Margin',
+    align: 'right',
+    underline: true,
+  },
+  {
+    key: 'funding',
+    label: 'Funding',
+    align: 'right',
+    underline: true,
+  },
+]
 
 export default function PositionsSection() {
   // Aptos 지갑에서 사용자 주소 가져오기
@@ -194,97 +119,106 @@ export default function PositionsSection() {
     return <PositionsError errorMessage={errorMessage} />
   }
 
-  // 빈 데이터 또는 포지션 없음
-  if (!positions || positions.length === 0) {
+  // 렌더 함수
+  const renderRow = (
+    position: UserPosition,
+    index: number,
+  ) => {
+    // 마켓 이름에서 코인 추출 (예: APT/USD -> APT)
+    const coin =
+      position.market.split('/')[0] || position.market
+
+    // PNL과 ROE 계산 (간단한 예시)
+    const pnl = 0 // TODO: 실제 계산 로직 필요
+    const roe = 0 // TODO: 실제 계산 로직 필요
+    const isProfitable = pnl >= 0
+
+    // Size 방향 (Long/Short)
+    const isLong = position.size > 0
+    const sizeDisplay = `${isLong ? '' : '-'}${Math.abs(position.size).toFixed(4)}`
+
     return (
-      <div className="flex flex-col gap-2.5 rounded-[2px] bg-stone-950 px-0 py-2">
-        {/* 테이블 헤더 */}
-        <div className="flex h-4 items-center gap-2 px-2 text-xs text-white/60">
-          <div className="flex flex-1 items-center gap-1">
-            <span>Coin</span>
-          </div>
-          <div className="flex flex-1 items-center gap-1">
-            <span>Size</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span>Position Value</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span>Entry Price</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span>Mark Price</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span className="underline decoration-dotted">
-              PNL (ROE %)
-            </span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span>Liq. Price</span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span className="underline decoration-dotted">
-              Margin
-            </span>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-1">
-            <span className="underline decoration-dotted">
-              Funding
-            </span>
-          </div>
-        </div>
-        <PositionsEmpty />
-      </div>
+      <TableRow key={`${position.market}-${index}`}>
+        <TableCell>
+          <span>{coin}</span>
+        </TableCell>
+
+        <TableCell>
+          <span
+            className={
+              isLong ? 'text-[#00c951]' : 'text-[#fb2c36]'
+            }
+          >
+            {sizeDisplay}
+          </span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span>
+            $
+            {(
+              Math.abs(position.size) * position.entry_price
+            ).toFixed(2)}
+          </span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span>${position.entry_price.toFixed(2)}</span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span>-</span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span
+            className={
+              isProfitable
+                ? 'text-[#00c951]'
+                : 'text-[#fb2c36]'
+            }
+          >
+            ${pnl.toFixed(2)} ({roe.toFixed(2)}%)
+          </span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span>
+            $
+            {position.estimated_liquidation_price.toFixed(
+              2,
+            )}
+          </span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span>
+            {position.is_isolated ? 'Isolated' : 'Cross'}
+          </span>
+        </TableCell>
+
+        <TableCell align="right">
+          <span
+            className={
+              position.unrealized_funding >= 0
+                ? 'text-[#00c951]'
+                : 'text-[#fb2c36]'
+            }
+          >
+            ${position.unrealized_funding.toFixed(4)}
+          </span>
+        </TableCell>
+      </TableRow>
     )
   }
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[2px] bg-stone-950 px-0 py-2">
-      {/* 테이블 헤더 */}
-      <div className="flex h-4 items-center gap-2 px-2 text-xs text-white/60">
-        <div className="flex flex-1 items-center gap-1">
-          <span>Coin</span>
-        </div>
-        <div className="flex flex-1 items-center gap-1">
-          <span>Size</span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span>Position Value</span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span>Entry Price</span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span>Mark Price</span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span className="underline decoration-dotted">
-            PNL (ROE %)
-          </span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span>Liq. Price</span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span className="underline decoration-dotted">
-            Margin
-          </span>
-        </div>
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <span className="underline decoration-dotted">
-            Funding
-          </span>
-        </div>
-      </div>
-
-      {/* 포지션 데이터 */}
-      {positions.map((position, index) => (
-        <PositionRow
-          key={`${position.market}-${index}`}
-          position={position}
-        />
-      ))}
-    </div>
+    <Table
+      columns={columns}
+      data={positions || []}
+      renderRow={renderRow}
+      emptyMessage="No open positions yet"
+      minWidth="1200px"
+    />
   )
 }

@@ -40,10 +40,55 @@ function TradingOrderEmpty() {
   )
 }
 
-export default function TradingOrder() {
+/**
+ * TradingOrder 탭 컴포넌트 (독립적으로 사용 가능)
+ */
+export function TradingOrderTabs({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: Tab
+  onTabChange: (tab: Tab) => void
+}) {
+  return (
+    <div className="flex h-10 items-center gap-0 border-b border-white/5 bg-stone-950">
+      <button
+        onClick={() => onTabChange('orderbook')}
+        className={`flex h-full items-center justify-center border-b-[1.5px] px-4 pb-1 ${
+          activeTab === 'orderbook'
+            ? 'border-[#ede030] text-white'
+            : 'border-transparent text-white/60 hover:text-white/80'
+        }`}
+      >
+        <span className="text-xs font-normal leading-4">
+          Orderbook
+        </span>
+      </button>
+      <button
+        onClick={() => onTabChange('trades')}
+        className={`flex h-full items-center justify-center border-b-[1.5px] px-4 pb-1 ${
+          activeTab === 'trades'
+            ? 'border-[#ede030] text-white'
+            : 'border-transparent text-white/60 hover:text-white/80'
+        }`}
+      >
+        <span className="text-xs font-normal leading-4">
+          Trades
+        </span>
+      </button>
+    </div>
+  )
+}
+
+/**
+ * TradingOrder 컨텐츠 컴포넌트 (독립적으로 사용 가능)
+ */
+export function TradingOrderContent({
+  activeTab,
+}: {
+  activeTab: Tab
+}) {
   const market = useTradingStore((s) => s.selectedMarket)
-  const [activeTab, setActiveTab] =
-    useState<Tab>('orderbook')
   const [depthLevel] = useState<number>(1)
 
   // 컨테이너 높이에 따라 동적으로 표시할 행 수 계산
@@ -122,41 +167,13 @@ export default function TradingOrder() {
   const baseAsset = market.split('/')[0] || 'BTC'
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2px]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* 백그라운드 로딩 인디케이터 */}
       {isRefetching && (
         <div className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full border border-stone-700 bg-stone-900/90 px-2 py-1 shadow-lg backdrop-blur-sm">
           <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
         </div>
       )}
-
-      {/* 탭 영역 */}
-      <div className="flex h-10 items-center gap-0 border-b border-white/5 bg-stone-950">
-        <button
-          onClick={() => setActiveTab('orderbook')}
-          className={`flex h-full items-center justify-center border-b-[1.5px] px-4 pb-1 ${
-            activeTab === 'orderbook'
-              ? 'border-[#ede030] text-white'
-              : 'border-transparent text-white/60 hover:text-white/80'
-          }`}
-        >
-          <span className="text-xs font-normal leading-4">
-            Orderbook
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('trades')}
-          className={`flex h-full items-center justify-center border-b-[1.5px] px-4 pb-1 ${
-            activeTab === 'trades'
-              ? 'border-[#ede030] text-white'
-              : 'border-transparent text-white/60 hover:text-white/80'
-          }`}
-        >
-          <span className="text-xs font-normal leading-4">
-            Trades
-          </span>
-        </button>
-      </div>
 
       {/* 오더북 컨텐츠 */}
       {activeTab === 'orderbook' && (
@@ -277,6 +294,24 @@ export default function TradingOrder() {
           </span>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * TradingOrder 메인 컴포넌트 (탭 + 컨텐츠 통합)
+ */
+export default function TradingOrder() {
+  const [activeTab, setActiveTab] =
+    useState<Tab>('orderbook')
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2px]">
+      <TradingOrderTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+      <TradingOrderContent activeTab={activeTab} />
     </div>
   )
 }
