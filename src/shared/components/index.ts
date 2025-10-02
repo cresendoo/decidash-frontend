@@ -9,7 +9,8 @@ export {
   DataTableRow,
 } from './data-table'
 export { Drawer } from './drawer'
-export { Dropdown, SearchInput } from './dropdown'
+export { Dropdown } from './dropdown'
+export { Input } from './input'
 export { MobileHeader } from './mobile-header'
 export { Table, TableCell, TableRow } from './table'
 export type { TableColumn, TableProps } from './table'
