@@ -1,35 +1,19 @@
 import { ChevronDown } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useState } from 'react';
 
-
-import { useMarketPrice } from '../hooks';
-import { useQuery } from '@tanstack/react-query';
-import { DeciDashConfig, getMarket } from '@coldbell/decidash-ts-sdk';
 import { useTradingStore } from '../store/trading-store';
+// 새로운 API 사용
+import { useMarketNames, useMarketPrice } from '../api';
 
 export default function TradingHeader() {
   const selectedMarket = useTradingStore(s => s.selectedMarket);
   const setSelectedMarket = useTradingStore(s => s.setSelectedMarket);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-  const [availableMarkets, setAvailableMarkets] = useState<string[]>([]);
 
-  // 사용 가능한 마켓 목록: react-query 사용
-  const { data: markets } = useQuery({
-    queryKey: ['markets', DeciDashConfig.DEVNET.tradingVM.APIURL],
-    queryFn: async () => {
-      const list = await getMarket({ decidashConfig: DeciDashConfig.DEVNET });
-      return list.map(m => m.market_name);
-    },
-    staleTime: 5 * 60_000,
-  });
+  // 새로운 API: 마켓 이름 목록 가져오기
+  const { data: availableMarkets = [] } = useMarketNames();
 
-  useEffect(() => {
-    if (markets && markets.length > 0) {
-      setAvailableMarkets(markets);
-    }
-  }, [markets]);
-
-  // React Query로 가격 가져오기
+  // 새로운 API: 가격 가져오기
   const { data: priceData } = useMarketPrice(selectedMarket);
   const price = priceData ? priceData.toLocaleString() : 'Loading...';
 
