@@ -31,7 +31,11 @@
     --etc-green: #00c951; /* green-500 */
     --etc-red: #fb2c36; /* red-500 */
     /* derived */
-    --bg-surface-95: color-mix(in srgb, var(--bg-surface) 95%, transparent);
+    --bg-surface-95: color-mix(
+      in srgb,
+      var(--bg-surface) 95%,
+      transparent
+    );
   }
   html,
   body,

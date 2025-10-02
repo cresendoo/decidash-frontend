@@ -7,14 +7,26 @@ export const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, lazy: async () => ({ Component: (await import('@/pages/traders')).default }) },
+      {
+        index: true,
+        lazy: async () => ({
+          Component: (await import('@/pages/traders'))
+            .default,
+        }),
+      },
       {
         path: 'traders',
-        lazy: async () => ({ Component: (await import('@/pages/traders')).default }),
+        lazy: async () => ({
+          Component: (await import('@/pages/traders'))
+            .default,
+        }),
       },
       {
         path: 'top-traders',
-        lazy: async () => ({ Component: (await import('@/pages/top-traders')).default }),
+        lazy: async () => ({
+          Component: (await import('@/pages/top-traders'))
+            .default,
+        }),
       },
     ],
   },

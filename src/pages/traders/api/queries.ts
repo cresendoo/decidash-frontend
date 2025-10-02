@@ -23,6 +23,12 @@ export type {
   MarketPrice,
 } from '@coldbell/decidash-ts-sdk'
 
+// Re-export websocket hook types
+export type {
+  DepthLevel,
+  MarketDepth,
+} from './websocket-hooks'
+
 // ============================================
 // HTTP 방식 React Query Hooks
 // ============================================

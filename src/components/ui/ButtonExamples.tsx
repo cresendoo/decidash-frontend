@@ -16,11 +16,15 @@ export function ButtonExamples() {
 
   return (
     <div className="space-y-8 p-8">
-      <h2 className="mb-4 text-2xl font-bold">Button 컴포넌트 예제</h2>
+      <h2 className="mb-4 text-2xl font-bold">
+        Button 컴포넌트 예제
+      </h2>
 
       {/* 기본 Variants */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">기본 Variants</h3>
+        <h3 className="text-lg font-semibold">
+          기본 Variants
+        </h3>
         <div className="flex flex-wrap gap-4">
           <Button variant="primary">Primary</Button>
           <Button variant="secondary">Secondary</Button>
@@ -32,7 +36,9 @@ export function ButtonExamples() {
 
       {/* 다양한 Size */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Size Variants</h3>
+        <h3 className="text-lg font-semibold">
+          Size Variants
+        </h3>
         <div className="flex flex-wrap items-center gap-4">
           <Button variant="primary" size="sm">
             Small
@@ -48,7 +54,9 @@ export function ButtonExamples() {
 
       {/* Disabled 상태 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Disabled 상태</h3>
+        <h3 className="text-lg font-semibold">
+          Disabled 상태
+        </h3>
         <div className="flex flex-wrap gap-4">
           <Button variant="primary" disabled>
             Primary Disabled
@@ -64,9 +72,15 @@ export function ButtonExamples() {
 
       {/* Loading 상태 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Loading 상태</h3>
+        <h3 className="text-lg font-semibold">
+          Loading 상태
+        </h3>
         <div className="flex flex-wrap gap-4">
-          <Button variant="primary" loading={loading} onClick={handleLoadingClick}>
+          <Button
+            variant="primary"
+            loading={loading}
+            onClick={handleLoadingClick}
+          >
             Click me to load
           </Button>
           <Button variant="secondary" loading>
@@ -77,12 +91,19 @@ export function ButtonExamples() {
 
       {/* 아이콘과 함께 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">아이콘과 함께</h3>
+        <h3 className="text-lg font-semibold">
+          아이콘과 함께
+        </h3>
         <div className="flex flex-wrap gap-4">
           <Button
             variant="primary"
             leftIcon={
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -97,7 +118,12 @@ export function ButtonExamples() {
           <Button
             variant="outline"
             rightIcon={
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -112,7 +138,12 @@ export function ButtonExamples() {
           <Button
             variant="secondary"
             leftIcon={
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -122,7 +153,12 @@ export function ButtonExamples() {
               </svg>
             }
             rightIcon={
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -139,7 +175,9 @@ export function ButtonExamples() {
 
       {/* Full Width */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Full Width</h3>
+        <h3 className="text-lg font-semibold">
+          Full Width
+        </h3>
         <Button variant="primary" fullWidth>
           Full Width Button
         </Button>
@@ -147,7 +185,9 @@ export function ButtonExamples() {
 
       {/* 실제 사용 예제 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">실제 사용 예제 (트레이딩 앱)</h3>
+        <h3 className="text-lg font-semibold">
+          실제 사용 예제 (트레이딩 앱)
+        </h3>
         <div className="flex flex-wrap gap-4">
           <Button variant="primary" size="lg">
             매수

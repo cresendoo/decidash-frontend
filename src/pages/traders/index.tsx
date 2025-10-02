@@ -1,15 +1,29 @@
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useState } from 'react';
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from 'react-resizable-panels'
+import { useState } from 'react'
 
-import { PositionsSection, TradeHistorySection, TradeSection,TradingSection } from './components';
+import {
+  PositionsSection,
+  TradeHistorySection,
+  TradeSection,
+  TradingSection,
+} from './components'
 
 export default function Traders() {
-  const [activeTab, setActiveTab] = useState<'positions' | 'history'>('positions');
+  const [activeTab, setActiveTab] = useState<
+    'positions' | 'history'
+  >('positions')
   return (
     <PanelGroup direction="horizontal" className="h-screen">
       {/* 왼쪽 메인 영역 - 세로로 리사이징 가능 */}
       <Panel defaultSize={70} minSize={50}>
-        <PanelGroup direction="vertical" className="h-full min-h-0">
+        <PanelGroup
+          direction="vertical"
+          className="h-full min-h-0"
+        >
           {/* 상단: Trading section */}
           <Panel defaultSize={80} minSize={20}>
             <TradingSection />
@@ -17,15 +31,17 @@ export default function Traders() {
           <PanelResizeHandle />
           {/* 하단 통합 섹션: Tabs (Positions / Trade History) */}
           <Panel defaultSize={20} minSize={20}>
-            <div className="h-full min-h-0 flex flex-col">
-              <div className="px-4 pt-2 border-b border-gray-700">
+            <div className="flex h-full min-h-0 flex-col">
+              <div className="border-b border-gray-700 px-4 pt-2">
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => setActiveTab('positions')}
+                    onClick={() =>
+                      setActiveTab('positions')
+                    }
                     className={
                       activeTab === 'positions'
-                        ? 'text-yellow-300 font-semibold pb-2 border-b-2 border-yellow-300'
-                        : 'text-gray-400 hover:text-gray-200 pb-2'
+                        ? 'border-b-2 border-yellow-300 pb-2 font-semibold text-yellow-300'
+                        : 'pb-2 text-gray-400 hover:text-gray-200'
                     }
                   >
                     Positions
@@ -34,15 +50,15 @@ export default function Traders() {
                     onClick={() => setActiveTab('history')}
                     className={
                       activeTab === 'history'
-                        ? 'text-yellow-300 font-semibold pb-2 border-b-2 border-yellow-300'
-                        : 'text-gray-400 hover:text-gray-2 00 pb-2'
+                        ? 'border-b-2 border-yellow-300 pb-2 font-semibold text-yellow-300'
+                        : 'hover:text-gray-2 00 pb-2 text-gray-400'
                     }
                   >
                     Trade History
                   </button>
                 </div>
               </div>
-              <div className="flex-1 min-h-0 overflow-auto">
+              <div className="min-h-0 flex-1 overflow-auto">
                 {activeTab === 'positions' ? (
                   <PositionsSection />
                 ) : (
@@ -61,5 +77,5 @@ export default function Traders() {
         <TradeSection />
       </Panel>
     </PanelGroup>
-  );
+  )
 }

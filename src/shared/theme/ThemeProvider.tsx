@@ -3,7 +3,11 @@ import { useEffect } from 'react'
 
 import { useAppStore } from '@/shared/store/appStore'
 
-export default function ThemeProvider({ children }: { children: ReactNode }) {
+export default function ThemeProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
   const theme = useAppStore((s) => s.theme)
   useEffect(() => {
     const root = document.documentElement

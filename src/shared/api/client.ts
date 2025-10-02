@@ -1,6 +1,15 @@
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+export type HttpMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
 
-import { DeciDashConfig, getMarket,getTradersDashboard, MARKET_LIST } from '@coldbell/decidash-ts-sdk'
+import {
+  DeciDashConfig,
+  getMarket,
+  MARKET_LIST,
+} from '@coldbell/decidash-ts-sdk'
 
 export interface RequestOptions {
   method?: HttpMethod
@@ -12,7 +21,10 @@ const defaultHeaders = {
   'Content-Type': 'application/json',
 }
 
-export async function http<T>(url: string, options: RequestOptions = {}): Promise<T> {
+export async function http<T>(
+  url: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const { method = 'GET', headers = {}, body } = options
   const res = await fetch(url, {
     method,
@@ -28,12 +40,20 @@ export async function http<T>(url: string, options: RequestOptions = {}): Promis
 
 // DeciDash SDK helpers
 
-export function createDeciDashConfig(overrides: Partial<DeciDashConfig> = {}): DeciDashConfig {
+export function createDeciDashConfig(
+  overrides: Partial<DeciDashConfig> = {},
+): DeciDashConfig {
   return {
     ...DeciDashConfig.DEVNET,
     ...overrides,
-    tradingVM: { ...DeciDashConfig.DEVNET.tradingVM, ...overrides.tradingVM },
-    node: { ...DeciDashConfig.DEVNET.node, ...overrides.node },
+    tradingVM: {
+      ...DeciDashConfig.DEVNET.tradingVM,
+      ...overrides.tradingVM,
+    },
+    node: {
+      ...DeciDashConfig.DEVNET.node,
+      ...overrides.node,
+    },
     fetchFn: overrides.fetchFn ?? fetch,
     WebSocketCtor: overrides.WebSocketCtor ?? undefined,
   }
@@ -44,25 +64,44 @@ let marketCache: Map<string, string> | null = null
 let cacheTimestamp: number | null = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
 
-export async function getMarketIdBySymbol(symbol: string): Promise<string> {
+export async function getMarketIdBySymbol(
+  symbol: string,
+): Promise<string> {
   const now = Date.now()
 
   // 캐시가 없거나 만료되었으면 새로 가져오기
-  if (!marketCache || !cacheTimestamp || (now - cacheTimestamp) > CACHE_DURATION) {
+  if (
+    !marketCache ||
+    !cacheTimestamp ||
+    now - cacheTimestamp > CACHE_DURATION
+  ) {
     try {
       const markets = await getMarket({
-        decidashConfig: DeciDashConfig.DEVNET
+        decidashConfig: DeciDashConfig.DEVNET,
       })
 
       marketCache = new Map()
       for (const market of markets) {
-        marketCache.set(market.market_name, market.market_addr)
+        marketCache.set(
+          market.market_name,
+          market.market_addr,
+        )
       }
       cacheTimestamp = now
     } catch (error) {
       // API 호출 실패시 기존 MARKET_LIST 폴백
-      console.warn('Failed to fetch markets from API, falling back to MARKET_LIST:', error)
-      return MARKET_LIST[symbol] || (() => { throw new Error(`Unknown market symbol: ${symbol}`) })()
+      console.warn(
+        'Failed to fetch markets from API, falling back to MARKET_LIST:',
+        error,
+      )
+      return (
+        MARKET_LIST[symbol] ||
+        (() => {
+          throw new Error(
+            `Unknown market symbol: ${symbol}`,
+          )
+        })()
+      )
     }
   }
 

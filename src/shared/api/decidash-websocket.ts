@@ -5,7 +5,9 @@ import {
   WSAPISession,
 } from '@coldbell/decidash-ts-sdk'
 
-export function createWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) {
+export function createWsSession(
+  config: DeciDashConfig = DeciDashConfig.DEVNET,
+) {
   const session = new WSAPISession({
     wsURL: config.tradingVM.WSURL,
     WebSocketCtor: config.WebSocketCtor,
@@ -21,9 +23,13 @@ export function createWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) 
         console.warn('WebSocket disconnect error:', error)
       }
     },
-    subscribeMarketPrice: (market: string): AsyncIterable<WebsocketResponseMarketPrice> =>
+    subscribeMarketPrice: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketPrice> =>
       session.subscribeMarketPrice(market),
-    subscribeMarketDepth: (market: string): AsyncIterable<WebsocketResponseMarketDepth> =>
+    subscribeMarketDepth: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketDepth> =>
       session.subscribeMarketDepth(market),
   }
 }
@@ -33,9 +39,12 @@ let singleton: WSAPISession | null = null
 // 전역 connectPromise로 중복 connect 방지
 let globalConnectPromise: Promise<void> | null = null
 // StrictMode 마운트/언마운트 떨림을 흡수하기 위한 지연 disconnect 타이머
-let disconnectTimer: ReturnType<typeof setTimeout> | null = null
+let disconnectTimer: ReturnType<typeof setTimeout> | null =
+  null
 
-export function getWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) {
+export function getWsSession(
+  config: DeciDashConfig = DeciDashConfig.DEVNET,
+) {
   if (!singleton) {
     singleton = new WSAPISession({
       wsURL: config.tradingVM.WSURL,
@@ -45,7 +54,8 @@ export function getWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) {
 
   // StrictMode로 인한 mount/unmount 이중 호출을 견디도록 ref-count 도입
   // 전역 refCount를 모듈 스코프에서 유지
-  ;(getWsSession as any)._refCount = (getWsSession as any)._refCount ?? 0
+  ;(getWsSession as any)._refCount =
+    (getWsSession as any)._refCount ?? 0
 
   async function connect(): Promise<void> {
     ;(getWsSession as any)._refCount++
@@ -55,16 +65,21 @@ export function getWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) {
       disconnectTimer = null
     }
     if (!globalConnectPromise) {
-      globalConnectPromise = singleton!.connect().catch((e: unknown) => {
-        globalConnectPromise = null
-        throw e
-      })
+      globalConnectPromise = singleton!
+        .connect()
+        .catch((e: unknown) => {
+          globalConnectPromise = null
+          throw e
+        })
     }
     return globalConnectPromise
   }
 
   function disconnect(): void {
-    const next = Math.max(0, ((getWsSession as any)._refCount as number) - 1)
+    const next = Math.max(
+      0,
+      ((getWsSession as any)._refCount as number) - 1,
+    )
     ;(getWsSession as any)._refCount = next
     if (next === 0) {
       // StrictMode에서 즉시 닫으면 CLOSING 상태에 걸릴 수 있어 약간 지연 후 닫기
@@ -88,9 +103,13 @@ export function getWsSession(config: DeciDashConfig = DeciDashConfig.DEVNET) {
     session: singleton,
     connect,
     disconnect,
-    subscribeMarketPrice: (market: string): AsyncIterable<WebsocketResponseMarketPrice> =>
+    subscribeMarketPrice: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketPrice> =>
       singleton!.subscribeMarketPrice(market),
-    subscribeMarketDepth: (market: string): AsyncIterable<WebsocketResponseMarketDepth> =>
+    subscribeMarketDepth: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketDepth> =>
       singleton!.subscribeMarketDepth(market),
   }
 }
