@@ -11,6 +11,7 @@ export {
   type MarketCandlesticksInterval,
   type MarketDepthResponse,
   type MarketPrice,
+  type MarketWithPrice,
   type RequestOptions,
   useMarketCandlesticks,
   useMarketId,
@@ -18,6 +19,7 @@ export {
   useMarketPrice,
   useMarketPriceDetail,
   useMarkets,
+  useMarketsWithPrices,
   useUserPositions,
   useUserTradeHistory,
 } from './queries'

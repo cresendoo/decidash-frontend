@@ -69,7 +69,13 @@ function TradingSectionEmpty() {
   )
 }
 
-export default function TradingSection() {
+interface TradingSectionProps {
+  onOpenMarketList?: () => void
+}
+
+export default function TradingSection({
+  onOpenMarketList,
+}: TradingSectionProps = {}) {
   const selectedMarket = useTradingStore(
     (s) => s.selectedMarket,
   )
@@ -131,7 +137,17 @@ export default function TradingSection() {
       )}
 
       {/* 상단 헤더 */}
-      <TradingHeader />
+      {onOpenMarketList ? (
+        <TradingHeader
+          onOpenMarketList={onOpenMarketList}
+        />
+      ) : (
+        <TradingHeader
+          onOpenMarketList={() => {
+            /* no-op */
+          }}
+        />
+      )}
 
       {/* 차트와 주문 영역 */}
       <div className="flex min-h-0 flex-1 rounded-[2px] bg-stone-950">

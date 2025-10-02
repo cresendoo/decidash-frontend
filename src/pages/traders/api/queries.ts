@@ -1,9 +1,12 @@
 import {
+  type AssetContext,
   DeciDashConfig,
   getAccountPositions,
-  getMarket,
+  getAssetContexts,
   getMarketCandlesticks,
   getMarketPrice,
+  getMarkets,
+  type Market,
   MARKET_LIST,
   type MarketCandlesticks,
   type MarketCandlesticksInterval,
@@ -37,6 +40,8 @@ export interface RequestOptions {
 // Re-export types for convenience
 // ============================================
 export type {
+  AssetContext,
+  Market,
   MarketCandlesticks,
   MarketCandlesticksInterval,
   MarketPrice,
@@ -109,7 +114,7 @@ export async function getMarketIdBySymbol(
     now - cacheTimestamp > CACHE_DURATION
   ) {
     try {
-      const markets = await getMarket({
+      const markets = await getMarkets({
         decidashConfig: DeciDashConfig.DEVNET,
       })
 
@@ -159,12 +164,77 @@ export const useMarkets = (
   return useQuery({
     queryKey: ['markets', config.tradingVM.APIURL],
     queryFn: async () => {
-      const markets = await getMarket({
+      const markets = await getMarkets({
         decidashConfig: config,
       })
       return markets
     },
     staleTime: 5 * 60_000, // 5분
+  })
+}
+
+/**
+ * 마켓 목록 + 가격 정보 조회
+ */
+export interface MarketWithPrice extends Market {
+  currentPrice?: number
+  priceChange24h?: number
+  priceChangePercent24h?: number
+  volume24h?: number
+  openInterest?: number
+}
+
+export const useMarketsWithPrices = (
+  config: DeciDashConfig = DeciDashConfig.DEVNET,
+) => {
+  return useQuery({
+    queryKey: [
+      'marketsWithPrices',
+      config.tradingVM.APIURL,
+    ],
+    queryFn: async () => {
+      // 마켓 목록과 AssetContext(가격/변동률 포함)를 병렬로 가져오기
+      const [markets, assetContexts] = await Promise.all([
+        getMarkets({ decidashConfig: config }),
+        getAssetContexts({ decidashConfig: config }),
+      ])
+
+      // AssetContext를 마켓 이름으로 매핑 (context.market은 마켓 이름)
+      const assetContextMap = new Map<
+        string,
+        AssetContext
+      >()
+      assetContexts.forEach((context) => {
+        assetContextMap.set(context.market, context)
+      })
+
+      // 마켓 데이터에 가격 및 변동률 정보 추가
+      const marketsWithPrices: MarketWithPrice[] =
+        markets.map((market) => {
+          // market_name으로 조회해야 함 (market_addr가 아니라!)
+          const context = assetContextMap.get(
+            market.market_name,
+          )
+          return {
+            ...market,
+            currentPrice: context?.mark_price,
+            priceChange24h:
+              context?.mark_price &&
+              context?.previous_day_price
+                ? context.mark_price -
+                  context.previous_day_price
+                : undefined,
+            priceChangePercent24h:
+              context?.price_change_pct_24h,
+            volume24h: context?.volume_24h,
+            openInterest: context?.open_interest,
+          }
+        })
+
+      return marketsWithPrices
+    },
+    staleTime: 1000 * 60, // 1분
+    refetchInterval: 1000 * 10, // 10초마다 자동 업데이트
   })
 }
 
@@ -177,7 +247,7 @@ export const useMarketNames = (
   return useQuery({
     queryKey: ['marketNames', config.tradingVM.APIURL],
     queryFn: async () => {
-      const markets = await getMarket({
+      const markets = await getMarkets({
         decidashConfig: config,
       })
       return markets.map((m) => m.market_name)

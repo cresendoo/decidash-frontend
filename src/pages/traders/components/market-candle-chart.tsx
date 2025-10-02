@@ -91,8 +91,11 @@ export default function MarketCandleChart({
     if (chartRef.current) return
 
     const el = containerRef.current
-    const rect = el.getBoundingClientRect()
     const isDark = theme === 'dark'
+    // clientWidth/clientHeight를 사용하여 더 정확한 크기 계산
+    const width = el.clientWidth || el.offsetWidth || 300
+    const height = el.clientHeight || el.offsetHeight || 300
+
     const chart = createChart(el, {
       layout: {
         textColor: isDark ? '#d1d4dc' : '#111827',
@@ -115,8 +118,8 @@ export default function MarketCandleChart({
       timeScale: {
         borderColor: isDark ? '#2d2d2d' : '#e5e7eb',
       },
-      width: Math.max(1, Math.floor(rect.width)),
-      height: Math.max(1, Math.floor(rect.height)),
+      width: Math.max(100, Math.floor(width)),
+      height: Math.max(100, Math.floor(height)),
     })
     const series = chart.addSeries(CandlestickSeries, {
       upColor: '#16a34a',
@@ -254,12 +257,14 @@ export default function MarketCandleChart({
 
   return (
     <div
-      className={`${height === 'parent' ? 'flex h-full flex-col' : ''}`}
+      className={`${height === 'parent' ? 'flex h-full w-full flex-col' : 'w-full'}`}
     >
       <div
         ref={containerRef}
         className={
-          height === 'parent' ? 'min-h-0 flex-1' : ''
+          height === 'parent'
+            ? 'min-h-0 min-w-0 flex-1'
+            : ''
         }
         style={{
           height:
@@ -267,6 +272,7 @@ export default function MarketCandleChart({
               ? undefined
               : (height as number),
           width: '100%',
+          maxWidth: '100%',
           minHeight:
             height === 'parent'
               ? undefined

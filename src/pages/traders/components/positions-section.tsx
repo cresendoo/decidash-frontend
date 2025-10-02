@@ -3,8 +3,8 @@ import type { UserPosition } from '@coldbell/decidash-ts-sdk'
 import {
   Table,
   TableCell,
-  TableRow,
   type TableColumn,
+  TableRow,
 } from '@/shared/components'
 import { useWallet } from '@/shared/hooks'
 

@@ -1,5 +1,6 @@
 export { default as ChartControls } from './chart-controls'
 export { default as MarketCandleChart } from './market-candle-chart'
+export { default as MarketListPanel } from './market-list-panel'
 export { default as PositionsSection } from './positions-section'
 export { default as TradeHistorySection } from './trade-history-section'
 export { default as TradeSection } from './trade-section'

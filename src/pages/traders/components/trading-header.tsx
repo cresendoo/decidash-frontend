@@ -1,19 +1,16 @@
-import { Dropdown } from '@/shared/components'
-
-import { useMarketNames, useMarketPrice } from '../api'
+import { useMarketPrice } from '../api'
 import { useTradingStore } from '../store/trading-store'
 
-export default function TradingHeader() {
+interface TradingHeaderProps {
+  onOpenMarketList: () => void
+}
+
+export default function TradingHeader({
+  onOpenMarketList,
+}: TradingHeaderProps) {
   const selectedMarket = useTradingStore(
     (s) => s.selectedMarket,
   )
-  const setSelectedMarket = useTradingStore(
-    (s) => s.setSelectedMarket,
-  )
-
-  // 마켓 이름 목록 가져오기
-  const { data: availableMarkets = [] } = useMarketNames()
-
   // 가격 가져오기
   const { data: priceData, isFetching: isPriceFetching } =
     useMarketPrice(selectedMarket)
@@ -45,12 +42,6 @@ export default function TradingHeader() {
     return colors[index]
   }
 
-  // Dropdown options 생성
-  const marketOptions = availableMarkets.map((market) => ({
-    label: market,
-    value: market,
-  }))
-
   return (
     <div className="flex h-16 w-full items-center justify-between gap-2 rounded-[2px] bg-stone-950 px-3 py-0">
       {/* 좌측: 마켓 선택 */}
@@ -67,15 +58,29 @@ export default function TradingHeader() {
           {selectedMarket}
         </span>
 
-        {/* Dropdown 컴포넌트 사용 */}
-        <Dropdown
-          value={selectedMarket}
-          options={marketOptions}
-          onChange={(value) =>
-            setSelectedMarket(value as string)
-          }
-          className="h-auto border-0 bg-transparent p-0 hover:bg-transparent"
-        />
+        {/* 마켓 리스트 열기 버튼 */}
+        <button
+          onClick={onOpenMarketList}
+          className="flex h-6 w-6 items-center justify-center rounded hover:bg-white/10"
+          aria-label="Open market list"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-white/60"
+          >
+            <path
+              d="M4 6L8 10L12 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* 우측: 가격 표시 */}
