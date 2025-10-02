@@ -1,6 +1,6 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-import { DeciDashConfig, getMarket,MARKET_LIST } from '@coldbell/decidash-ts-sdk'
+import { DeciDashConfig, getMarket,getTradersDashboard, MARKET_LIST } from '@coldbell/decidash-ts-sdk'
 
 export interface RequestOptions {
   method?: HttpMethod

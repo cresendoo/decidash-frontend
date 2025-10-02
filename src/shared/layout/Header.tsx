@@ -4,9 +4,8 @@ import { Button } from '@/components/ui'
 
 export default function Header() {
   const nav = [
-    { to: '/markets', label: 'Trade' },
-    { to: '/traders', label: 'Trade' },
-    { to: '/', label: 'Trade' },
+    { to: '/traders', label: 'Traders' },
+    { to: '/top-traders', label: 'Top Traders' },
   ]
   return (
     <header
@@ -22,9 +21,14 @@ export default function Header() {
           <Link to="/" className="flex items-center gap-2">
             <span
               className="inline-block h-4 w-4 rounded-full"
-              style={{ backgroundColor: 'var(--fg-default)' }}
+              style={{
+                backgroundColor: 'var(--fg-default)',
+              }}
             />
-            <span className="font-serif text-lg italic" style={{ color: 'var(--fg-muted)' }}>
+            <span
+              className="font-serif text-lg italic"
+              style={{ color: 'var(--fg-muted)' }}
+            >
               Decidash
             </span>
           </Link>
