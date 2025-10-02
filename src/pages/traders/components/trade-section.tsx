@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { Input } from '@/shared/components'
+
 /**
  * Trade Section 컴포넌트
  *
@@ -22,21 +24,51 @@ export default function TradeSection() {
     'buy' | 'sell'
   >('buy')
   const [initialMargin, setInitialMargin] = useState('0.0')
+  const [marginCurrency, setMarginCurrency] = useState<
+    'USDC' | 'BTC'
+  >('USDC')
   const [marginPercentage, setMarginPercentage] =
     useState(0)
 
-  const availableBalance = 123.23
+  const availableBalance = 123.23 // USDC 기준
+  const BTC_USD_PRICE = 65000 // 추후 실시간 가격 연동 가능
+
+  const parseToNumber = (value: string) => {
+    const n = Number(value)
+    return isNaN(n) ? 0 : n
+  }
+
+  const toUsdc = (
+    value: number,
+    currency: 'USDC' | 'BTC',
+  ) => (currency === 'USDC' ? value : value * BTC_USD_PRICE)
+
+  const toBtc = (valueUsdc: number) =>
+    BTC_USD_PRICE > 0 ? valueUsdc / BTC_USD_PRICE : 0
+
+  const formatUsdc = (n: number) =>
+    n.toLocaleString(undefined, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+    })
+  const formatBtc = (n: number) =>
+    n.toLocaleString(undefined, {
+      maximumFractionDigits: 6,
+      minimumFractionDigits: 0,
+    })
 
   const handleMarginChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value
     setInitialMargin(value)
-    if (value && !isNaN(Number(value))) {
-      const percentage =
-        (Number(value) / availableBalance) * 100
-      setMarginPercentage(Math.min(percentage, 100))
-    }
+    const numeric = parseToNumber(value)
+    const valueUsdc = toUsdc(numeric, marginCurrency)
+    const percentage =
+      availableBalance > 0
+        ? (valueUsdc / availableBalance) * 100
+        : 0
+    setMarginPercentage(Math.min(percentage, 100))
   }
 
   const handlePercentageChange = (
@@ -44,8 +76,13 @@ export default function TradeSection() {
   ) => {
     const percentage = Number(e.target.value)
     setMarginPercentage(percentage)
-    const margin = (availableBalance * percentage) / 100
-    setInitialMargin(margin.toFixed(2))
+    const marginUsdc = (availableBalance * percentage) / 100
+    if (marginCurrency === 'USDC') {
+      setInitialMargin(marginUsdc.toFixed(2))
+    } else {
+      const marginBtc = toBtc(marginUsdc)
+      setInitialMargin(marginBtc.toString())
+    }
   }
 
   return (
@@ -184,21 +221,77 @@ export default function TradeSection() {
           <p className="text-xs font-normal leading-normal text-white/60">
             Initial Margin
           </p>
-          <div
-            className="flex h-9 w-full shrink-0 items-center gap-2 rounded-lg border border-stone-800 px-3 py-0 text-xs font-normal leading-4 text-white"
-            data-name="search, input"
-            data-node-id="1651:2008"
-          >
-            <input
-              type="number"
-              value={initialMargin}
-              onChange={handleMarginChange}
-              placeholder="0.0"
-              className="min-w-0 flex-1 bg-transparent text-white outline-none"
-              step="0.01"
-              min="0"
-            />
-            <p className="shrink-0 text-white">USDC</p>
+          <div className="flex w-full flex-col gap-1">
+            <div className="flex w-full items-center gap-2">
+              <Input
+                type="number"
+                value={initialMargin}
+                onChange={handleMarginChange}
+                placeholder="0.0"
+                className="flex-1"
+                step="0.000001"
+                min="0"
+                rightIcon={
+                  <div className="flex items-center gap-1">
+                    <button
+                      className={`rounded-md px-2 py-1 text-[10px] ${
+                        marginCurrency === 'USDC'
+                          ? 'bg-white/10 text-white'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                      onClick={() =>
+                        setMarginCurrency('USDC')
+                      }
+                      type="button"
+                    >
+                      USDC
+                    </button>
+                    <button
+                      className={`rounded-md px-2 py-1 text-[10px] ${
+                        marginCurrency === 'BTC'
+                          ? 'bg-white/10 text-white'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                      onClick={() =>
+                        setMarginCurrency('BTC')
+                      }
+                      type="button"
+                    >
+                      BTC
+                    </button>
+                  </div>
+                }
+              />
+            </div>
+
+            {/* Secondary unit display */}
+            <div className="flex items-center justify-end">
+              {marginCurrency === 'USDC' ? (
+                <p className="text-[11px] leading-4 text-white/60">
+                  ≈{' '}
+                  {formatBtc(
+                    toBtc(
+                      toUsdc(
+                        parseToNumber(initialMargin),
+                        'USDC',
+                      ),
+                    ),
+                  )}{' '}
+                  BTC
+                </p>
+              ) : (
+                <p className="text-[11px] leading-4 text-white/60">
+                  ≈{' '}
+                  {formatUsdc(
+                    toUsdc(
+                      parseToNumber(initialMargin),
+                      'BTC',
+                    ),
+                  )}{' '}
+                  USDC
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Slider + Percentage */}
@@ -238,7 +331,7 @@ export default function TradeSection() {
             </div>
 
             {/* Percentage Display */}
-            <div className="flex h-8 w-14 shrink-0 items-center justify-end gap-0.5 rounded-lg border border-stone-800 px-3 py-0 text-xs font-normal leading-normal text-white">
+            <div className="flex h-8 w-14 shrink-0 items-center justify-end gap-0.5 rounded-lg border border-white/10 px-3 py-0 text-xs font-normal leading-normal text-white">
               <p className="text-right">
                 {marginPercentage}
               </p>

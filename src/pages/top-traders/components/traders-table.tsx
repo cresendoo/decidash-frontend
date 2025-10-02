@@ -1,5 +1,6 @@
 import { DeciDashConfig } from '@coldbell/decidash-ts-sdk'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   Card,
@@ -12,7 +13,7 @@ import {
   DataTableHeaderCell,
   DataTableRow,
   Dropdown,
-  SearchInput,
+  Input,
 } from '@/shared/components'
 import { generateAvatar } from '@/shared/utils/avatar'
 
@@ -42,6 +43,52 @@ const formatCurrency = (
     return `$${(value / 1_000).toFixed(2)}K`
   }
   return `$${value.toFixed(2)}`
+}
+
+// ============================================
+// 로컬 SearchInput 컴포넌트
+// ============================================
+
+interface SearchInputProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}
+
+function SearchInput({
+  value,
+  onChange,
+  placeholder = 'Search...',
+}: SearchInputProps) {
+  return (
+    <Input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-[240px]"
+      leftIcon={
+        <svg
+          className="size-4 shrink-0 text-white/60"
+          fill="none"
+          viewBox="0 0 16 16"
+        >
+          <circle
+            cx="7.5"
+            cy="7.5"
+            r="5.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.5"
+            d="m11.5 11.5 3 3"
+          />
+        </svg>
+      }
+    />
+  )
 }
 
 /**
@@ -198,6 +245,7 @@ function TradersTableEmpty() {
 // ============================================
 
 export default function TradersTable() {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(50)
   const [search, setSearch] = useState('')
@@ -391,6 +439,10 @@ export default function TradersTable() {
             {traders.map((trader, index) => (
               <DataTableRow
                 key={`${trader.address}-${page}-${index}`}
+                onClick={() =>
+                  navigate(`/top-traders/${trader.address}`)
+                }
+                className="cursor-pointer"
               >
                 {/* Trader */}
                 <DataTableCell width="grow" minWidth={220}>
