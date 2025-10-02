@@ -28,6 +28,14 @@ export const router = createBrowserRouter([
             .default,
         }),
       },
+      {
+        path: 'top-traders/:address',
+        lazy: async () => ({
+          Component: (
+            await import('@/pages/top-traders/trader')
+          ).default,
+        }),
+      },
     ],
   },
 ])
