@@ -1,7 +1,5 @@
 import type { MarketTradeHistory } from '@coldbell/decidash-ts-sdk'
 
-import { useWallet } from '@/shared/hooks'
-
 import { useUserTradeHistory } from '../api'
 
 /**
@@ -167,8 +165,8 @@ function TradeRow({
 }
 
 export default function TradeHistorySection() {
-  // Aptos 지갑에서 사용자 주소 가져오기
-  const { account } = useWallet()
+  // Wallet connection disabled - use null for now
+  const account = null
 
   const {
     data: trades,

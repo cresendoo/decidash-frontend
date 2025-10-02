@@ -1,17 +1,11 @@
 import { Link, NavLink } from 'react-router-dom'
 
-import { useWallet } from '@/shared/hooks'
-
 import { Button } from '../components/button'
 
 export default function Header() {
-  const {
-    account,
-    connected,
-    wallets,
-    connect,
-    disconnect,
-  } = useWallet()
+  // Wallet connection temporarily disabled
+  const connected = false
+  const account = null
 
   const nav = [
     { to: '/traders', label: 'Trade' },
@@ -23,11 +17,12 @@ export default function Header() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  // 첫 번째 사용 가능한 지갑으로 연결
   const handleConnect = () => {
-    if (wallets.length > 0) {
-      connect(wallets[0].name)
-    }
+    console.log('Wallet connection will be implemented')
+  }
+
+  const handleDisconnect = () => {
+    console.log('Wallet disconnection will be implemented')
   }
 
   return (
@@ -144,7 +139,7 @@ export default function Header() {
                 variant="outline"
                 size="sm"
                 className="h-9 rounded-lg px-4"
-                onClick={disconnect}
+                onClick={handleDisconnect}
               >
                 Disconnect
               </Button>

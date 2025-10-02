@@ -25,13 +25,6 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (
-              id.includes('@aptos-labs') ||
-              id.includes('@reown') ||
-              id.includes('wagmi')
-            ) {
-              return 'wallet-adapters'
-            }
-            if (
               id.includes('react') ||
               id.includes('react-dom')
             ) {
@@ -39,6 +32,9 @@ export default defineConfig({
             }
             if (id.includes('@tanstack')) {
               return 'tanstack'
+            }
+            if (id.includes('lightweight-charts')) {
+              return 'charts'
             }
             return 'vendor'
           }
