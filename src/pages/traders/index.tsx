@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import {
   Panel,
   PanelGroup,
   PanelResizeHandle,
 } from 'react-resizable-panels'
-import { useState } from 'react'
 
 import {
   PositionsSection,

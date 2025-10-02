@@ -1,10 +1,11 @@
-import { useTradersDashboard } from '../api'
-import MarketSummarySkeleton from './market-summary-skeleton'
 import {
   Card,
   CardContent,
   CardTitle,
 } from '@/shared/components'
+
+import { useTradersDashboard } from '../api'
+import MarketSummarySkeleton from './market-summary-skeleton'
 
 // ============================================
 // 상태별 컴포넌트들
@@ -19,7 +20,7 @@ function MarketSummaryError({
   errorMessage?: string
 }) {
   return (
-    <section className="flex gap-5">
+    <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
       {[
         'Market Sentiment',
         'Top Performer',
@@ -31,7 +32,7 @@ function MarketSummaryError({
             <CardTitle>{title.toUpperCase()}</CardTitle>
             <div className="flex flex-col gap-1">
               <p className="text-sm text-white/40">
-                데이터를 불러올 수 없습니다
+                Unable to load data
               </p>
               {index === 0 && errorMessage && (
                 <p className="text-xs text-white/30">
@@ -52,7 +53,7 @@ function MarketSummaryError({
  */
 function MarketSummaryEmpty() {
   return (
-    <section className="flex gap-5">
+    <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
       {[
         'Market Sentiment',
         'Top Performer',
@@ -62,9 +63,7 @@ function MarketSummaryEmpty() {
         <Card key={index} minHeight="min-h-[140px]">
           <CardContent>
             <CardTitle>{title.toUpperCase()}</CardTitle>
-            <p className="text-sm text-white/40">
-              데이터 없음
-            </p>
+            <p className="text-sm text-white/40">No data</p>
             <div />
           </CardContent>
         </Card>
@@ -137,13 +136,13 @@ export default function MarketSummary() {
   }
 
   return (
-    <section className="relative flex gap-5">
+    <section className="relative grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
       {/* 백그라운드 로딩 인디케이터 */}
       {isRefetching && (
-        <div className="absolute right-0 top-0 flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+        <div className="absolute right-0 top-0 z-10 flex items-center gap-2 rounded-full border border-stone-700 bg-stone-900/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
           <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
           <span className="text-xs text-white/80">
-            업데이트 중...
+            Updating...
           </span>
         </div>
       )}
