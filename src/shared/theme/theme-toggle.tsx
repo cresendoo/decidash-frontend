@@ -1,4 +1,4 @@
-import { useAppStore } from '@/shared/store/appStore'
+import { useAppStore } from '@/shared/store/app-store'
 
 export default function ThemeToggle() {
   const theme = useAppStore((s) => s.theme)
