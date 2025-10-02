@@ -1,0 +1,4 @@
+# Netlify redirects for SPA
+# 모든 요청을 index.html로 리다이렉트 (SPA 라우팅 지원)
+/*    /index.html   200
+
