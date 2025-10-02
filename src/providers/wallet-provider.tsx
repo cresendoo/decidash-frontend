@@ -1,5 +1,5 @@
 import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 /**
  * Aptos 지갑 프로바이더
@@ -23,6 +23,16 @@ interface WalletProviderProps {
 export function WalletProvider({
   children,
 }: WalletProviderProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <>{children}</>
+  }
+
   return (
     <AptosWalletAdapterProvider
       autoConnect={false}
