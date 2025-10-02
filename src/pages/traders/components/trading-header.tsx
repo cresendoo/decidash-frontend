@@ -1,9 +1,7 @@
-import { ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { Dropdown } from '@/shared/components'
 
-import { useTradingStore } from '../store/trading-store'
-// 새로운 API 사용
 import { useMarketNames, useMarketPrice } from '../api'
+import { useTradingStore } from '../store/trading-store'
 
 export default function TradingHeader() {
   const selectedMarket = useTradingStore(
@@ -12,52 +10,82 @@ export default function TradingHeader() {
   const setSelectedMarket = useTradingStore(
     (s) => s.setSelectedMarket,
   )
-  const [dropdownOpen, setDropdownOpen] =
-    useState<boolean>(false)
 
-  // 새로운 API: 마켓 이름 목록 가져오기
+  // 마켓 이름 목록 가져오기
   const { data: availableMarkets = [] } = useMarketNames()
 
-  // 새로운 API: 가격 가져오기
-  const { data: priceData } = useMarketPrice(selectedMarket)
-  const price = priceData
-    ? priceData.toLocaleString()
-    : 'Loading...'
+  // 가격 가져오기
+  const { data: priceData, isFetching: isPriceFetching } =
+    useMarketPrice(selectedMarket)
+
+  // 가격 포맷팅
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price)
+  }
+
+  const displayPrice =
+    priceData !== undefined
+      ? formatPrice(priceData)
+      : 'Loading...'
+
+  // 마켓 아이콘 가져오기 (첫 글자 기반 색상)
+  const getMarketColor = (market: string) => {
+    const colors = [
+      'bg-orange-500',
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-yellow-500',
+    ]
+    const index = market.charCodeAt(0) % colors.length
+    return colors[index]
+  }
+
+  // Dropdown options 생성
+  const marketOptions = availableMarkets.map((market) => ({
+    label: market,
+    value: market,
+  }))
 
   return (
-    <div className="flex items-center justify-between border-b border-gray-700 p-4">
-      {/* 좌측: 마켓 드롭다운 */}
-      <div className="relative">
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2 font-bold text-white hover:text-yellow-400"
+    <div className="flex h-16 w-full items-center justify-between gap-2 rounded-[2px] bg-stone-950 px-3 py-0">
+      {/* 좌측: 마켓 선택 */}
+      <div className="flex flex-1 items-center gap-2">
+        {/* 마켓 아이콘 */}
+        <div
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${getMarketColor(selectedMarket)} text-[10px] font-bold text-white`}
         >
-          <div className="h-6 w-6 rounded-full bg-yellow-500"></div>
+          {selectedMarket.charAt(0)}
+        </div>
+
+        {/* 마켓 이름 */}
+        <span className="text-[20px] font-normal leading-7 text-white">
           {selectedMarket}
-          <ChevronDown
-            size={16}
-            className="text-gray-400"
-          />
-        </button>
-        {dropdownOpen && (
-          <div className="absolute top-full z-10 mt-2 w-48 rounded border border-gray-600 bg-gray-800 shadow-lg">
-            {availableMarkets.map((marketName) => (
-              <button
-                key={marketName}
-                onClick={() => {
-                  setSelectedMarket(marketName)
-                  setDropdownOpen(false)
-                }}
-                className="block w-full px-4 py-2 text-left text-white hover:bg-gray-700"
-              >
-                {marketName}
-              </button>
-            ))}
-          </div>
-        )}
+        </span>
+
+        {/* Dropdown 컴포넌트 사용 */}
+        <Dropdown
+          value={selectedMarket}
+          options={marketOptions}
+          onChange={(value) =>
+            setSelectedMarket(value as string)
+          }
+          className="h-auto border-0 bg-transparent p-0 hover:bg-transparent"
+        />
       </div>
-      <div className="text-2xl font-bold text-white">
-        {price}
+
+      {/* 우측: 가격 표시 */}
+      <div className="flex items-center gap-2">
+        {isPriceFetching && priceData !== undefined && (
+          <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+        )}
+        <span className="text-[20px] font-normal leading-7 text-white">
+          {displayPrice}
+        </span>
       </div>
     </div>
   )

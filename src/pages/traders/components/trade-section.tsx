@@ -1,5 +1,15 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
+/**
+ * Trade Section 컴포넌트
+ *
+ * Figma 디자인 기반으로 제작
+ * - Isolated/Cross 마진 모드 선택
+ * - 레버리지 표시
+ * - Market/Limit 주문 타입
+ * - Buy/Long vs Sell/Short 포지션 타입
+ * - 증거금 입력 및 슬라이더
+ */
 export default function TradeSection() {
   const [marginMode, setMarginMode] = useState<
     'isolated' | 'cross'
@@ -22,7 +32,6 @@ export default function TradeSection() {
   ) => {
     const value = e.target.value
     setInitialMargin(value)
-    // 증거금 비율 자동 계산 (간단한 예시)
     if (value && !isNaN(Number(value))) {
       const percentage =
         (Number(value) / availableBalance) * 100
@@ -35,191 +44,224 @@ export default function TradeSection() {
   ) => {
     const percentage = Number(e.target.value)
     setMarginPercentage(percentage)
-    // 증거금 자동 계산
     const margin = (availableBalance * percentage) / 100
     setInitialMargin(margin.toFixed(2))
   }
 
   return (
-    <div className="flex h-full flex-col p-4 text-white">
-      {/* 상단 설정 영역 - 스크린샷 유사 pill UI */}
-      <div className="mb-5">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-900 px-3 py-2">
-            <button
-              onClick={() => setMarginMode('isolated')}
-              className={`rounded-lg px-3 py-1 text-xs transition-colors ${
-                marginMode === 'isolated'
-                  ? 'bg-gray-100 font-semibold text-black'
-                  : 'text-gray-300 hover:text-white'
-              }`}
-              aria-pressed={marginMode === 'isolated'}
-            >
-              Isolated
-            </button>
-            <button
-              onClick={() => setMarginMode('cross')}
-              className={`rounded-lg px-3 py-1 text-xs transition-colors ${
-                marginMode === 'cross'
-                  ? 'bg-gray-100 font-semibold text-black'
-                  : 'text-gray-300 hover:text-white'
-              }`}
-              aria-pressed={marginMode === 'cross'}
-            >
-              Cross
-            </button>
-          </div>
-
-          <div className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-2 text-xs text-gray-200">
-            {leverage}x
-          </div>
-        </div>
-      </div>
-
-      {/* 주문 타입 탭 - 언더라인 인디케이터 */}
-      <div className="mb-5">
-        <div className="relative">
-          <div className="flex text-sm">
-            {(['market', 'limit'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setOrderType(t)}
-                className={`flex-1 px-3 py-2 text-left transition-colors ${
-                  orderType === t
-                    ? 'text-yellow-400'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-                aria-pressed={orderType === t}
-              >
-                {t === 'market' ? 'Market' : 'Limit'}
-              </button>
-            ))}
-          </div>
-          <div className="h-[1px] bg-gray-700" />
-          <div
-            className={`absolute bottom-0 h-[2px] bg-yellow-400 transition-all duration-300 ${
-              orderType === 'market'
-                ? 'left-0 w-1/2'
-                : 'left-1/2 w-1/2'
+    <div
+      className="flex size-full flex-col gap-2 overflow-clip rounded-[2px] bg-stone-950 p-2"
+      data-name="orderbox"
+      data-node-id="1620:661"
+    >
+      {/* Isolated/Cross + Leverage */}
+      <div
+        className="flex w-full shrink-0 items-center gap-2"
+        data-name="selects"
+        data-node-id="1620:662"
+      >
+        <div
+          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0"
+          data-name="select"
+          data-node-id="1651:1855"
+        >
+          <button
+            onClick={() => setMarginMode('isolated')}
+            className={`text-xs font-medium leading-normal ${
+              marginMode === 'isolated'
+                ? 'text-white'
+                : 'text-white/60'
             }`}
-          />
+          >
+            Isolated
+          </button>
+        </div>
+        <div
+          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0"
+          data-name="select"
+          data-node-id="1651:1848"
+        >
+          <p className="text-xs font-medium leading-normal text-white">
+            {leverage}x
+          </p>
         </div>
       </div>
 
-      {/* 포지션 토글 - 세그먼트 */}
-      <div className="mb-4">
-        <div className="grid grid-cols-2 rounded-xl border border-gray-700 bg-gray-900 p-1">
+      {/* Market/Limit 탭 */}
+      <div
+        className="flex h-10 w-full shrink-0 items-center gap-2 border-b border-b-white/5"
+        data-name="tab"
+        data-node-id="1620:667"
+      >
+        <button
+          onClick={() => setOrderType('market')}
+          className={`flex h-10 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 border-b-[1.5px] px-4 pb-1 pt-0 ${
+            orderType === 'market'
+              ? 'border-b-[#ede030] text-white'
+              : 'border-b-transparent text-white/60'
+          }`}
+          data-name="tab"
+          data-node-id="1651:1546"
+        >
+          <p className="text-xs font-normal leading-4">
+            Market
+          </p>
+        </button>
+        <button
+          onClick={() => setOrderType('limit')}
+          className={`flex h-10 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 border-b-[1.5px] px-4 pb-1 pt-0 ${
+            orderType === 'limit'
+              ? 'border-b-[#ede030] text-white'
+              : 'border-b-transparent text-white/60'
+          }`}
+          data-name="tab"
+          data-node-id="1651:1549"
+        >
+          <p className="text-xs font-normal leading-4">
+            Limit
+          </p>
+        </button>
+      </div>
+
+      {/* 주문 영역 */}
+      <div className="flex w-full shrink-0 flex-col items-start gap-3 px-0 py-1">
+        {/* Buy/Sell 토글 */}
+        <div
+          className="flex h-8 w-full items-start gap-2 rounded-lg bg-stone-900"
+          data-name="tab"
+          data-node-id="1621:7959"
+        >
           <button
             onClick={() => setPositionType('buy')}
-            className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+            className={`flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-4 py-0 ${
               positionType === 'buy'
-                ? 'bg-yellow-400 font-semibold text-black'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-[#ede030] text-stone-950'
+                : 'bg-transparent text-white'
             }`}
-            aria-pressed={positionType === 'buy'}
+            data-name="tab"
+            data-node-id="1651:1916"
           >
-            Buy / Long
+            <p className="text-xs font-medium leading-4">
+              Buy / Long
+            </p>
           </button>
           <button
             onClick={() => setPositionType('sell')}
-            className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+            className={`flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-4 py-0 ${
               positionType === 'sell'
-                ? 'border border-gray-700 bg-gray-800 font-semibold text-white'
-                : 'text-gray-300 hover:text-white'
+                ? 'bg-[#ede030] text-stone-950'
+                : 'bg-transparent text-white'
             }`}
-            aria-pressed={positionType === 'sell'}
+            data-name="tab"
+            data-node-id="1651:1919"
           >
-            Sell / Short
+            <p className="text-xs font-medium leading-4">
+              Sell / Short
+            </p>
           </button>
         </div>
-      </div>
 
-      {/* 잔고 정보 */}
-      <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm text-gray-400">
+        {/* Available to trade */}
+        <div
+          className="flex w-full shrink-0 items-center justify-between text-xs font-normal leading-normal"
+          data-name="available to trade"
+          data-node-id="1621:7964"
+        >
+          <p className="text-white/60">
             Available to trade
-          </span>
-          <span className="text-sm font-semibold text-white">
-            {availableBalance} USDC
-          </span>
+          </p>
+          <p className="text-right text-white">
+            {availableBalance.toFixed(2)} USDC
+          </p>
         </div>
-      </div>
 
-      {/* 초기 증거금 입력 */}
-      <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between">
-          <label
-            htmlFor="initialMargin"
-            className="text-sm text-gray-400"
-          >
+        {/* Initial Margin */}
+        <div
+          className="flex w-full shrink-0 flex-col items-start gap-2"
+          data-name="initial margin"
+          data-node-id="1621:7967"
+        >
+          <p className="text-xs font-normal leading-normal text-white/60">
             Initial Margin
-          </label>
-        </div>
-        <div className="relative">
-          <input
-            id="initialMargin"
-            type="number"
-            value={initialMargin}
-            onChange={handleMarginChange}
-            placeholder="0.00"
-            className="w-full rounded-lg border border-gray-700 bg-gray-900 py-3 pl-3 pr-16 text-sm text-white focus:border-yellow-500 focus:outline-none"
-            step="0.01"
-            min="0"
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-400">
-            USDC
+          </p>
+          <div
+            className="flex h-9 w-full shrink-0 items-center gap-2 rounded-lg border border-stone-800 px-3 py-0 text-xs font-normal leading-4 text-white"
+            data-name="search, input"
+            data-node-id="1651:2008"
+          >
+            <input
+              type="number"
+              value={initialMargin}
+              onChange={handleMarginChange}
+              placeholder="0.0"
+              className="min-w-0 flex-1 bg-transparent text-white outline-none"
+              step="0.01"
+              min="0"
+            />
+            <p className="shrink-0 text-white">USDC</p>
+          </div>
+
+          {/* Slider + Percentage */}
+          <div className="flex w-full shrink-0 items-start gap-2">
+            {/* Slider */}
+            <div className="relative h-8 min-h-0 min-w-0 flex-1 shrink-0">
+              <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-[3px] bg-stone-800" />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={marginPercentage}
+                onChange={handlePercentageChange}
+                className="absolute left-0 top-1/2 w-full -translate-y-1/2 cursor-pointer appearance-none bg-transparent"
+                style={{
+                  height: '16px',
+                }}
+              />
+              <style>{`
+                input[type="range"]::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #ede030;
+                  cursor: pointer;
+                }
+                input[type="range"]::-moz-range-thumb {
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #ede030;
+                  cursor: pointer;
+                  border: none;
+                }
+              `}</style>
+            </div>
+
+            {/* Percentage Display */}
+            <div className="flex h-8 w-14 shrink-0 items-center justify-end gap-0.5 rounded-lg border border-stone-800 px-3 py-0 text-xs font-normal leading-normal text-white">
+              <p className="text-right">
+                {marginPercentage}
+              </p>
+              <p>%</p>
+            </div>
           </div>
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          {[25, 50, 75, 100].map((p) => (
-            <button
-              key={p}
-              onClick={() => {
-                const margin = (availableBalance * p) / 100
-                setMarginPercentage(p)
-                setInitialMargin(margin.toFixed(2))
-              }}
-              className="rounded border border-gray-700 bg-gray-900 py-1 text-xs text-gray-300 hover:border-gray-600 hover:text-white"
-            >
-              {p}%
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* 증거금 비율 슬라이더 */}
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm text-gray-400">
-            Margin Ratio
-          </span>
-          <span className="rounded border border-gray-700 bg-gray-900 px-2 py-0.5 text-xs text-gray-300">
-            {marginPercentage}%
-          </span>
-        </div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={marginPercentage}
-          onChange={handlePercentageChange}
-          className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-800"
-          style={{ accentColor: '#FACC15' }}
-        />
-      </div>
-
-      {/* 주문 실행 버튼 */}
+      {/* Submit Button */}
       <button
-        className={`w-full rounded-lg py-3 text-sm font-semibold shadow-lg transition-colors ${
+        className={`flex h-12 w-full shrink-0 items-center justify-center gap-1 rounded-xl px-4 py-0 transition-colors ${
           positionType === 'buy'
-            ? 'bg-yellow-400 text-black hover:bg-yellow-300'
-            : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+            ? 'bg-[#ede030] text-stone-950 hover:bg-[#ede030]/90'
+            : 'bg-[#fb2c36] text-white hover:bg-[#fb2c36]/90'
         }`}
+        data-node-id="1641:1925"
       >
-        {positionType === 'buy'
-          ? 'Buy / Long'
-          : 'Sell / Short'}
+        <p className="text-base font-medium leading-6">
+          {positionType === 'buy'
+            ? 'Buy / Long'
+            : 'Sell / Short'}
+        </p>
       </button>
     </div>
   )

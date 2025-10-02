@@ -2,6 +2,7 @@ import {
   DeciDashConfig,
   type WebsocketResponseMarketDepth,
   type WebsocketResponseMarketPrice,
+  WSAPISession,
 } from '@coldbell/decidash-ts-sdk'
 import {
   type QueryKey,
@@ -10,8 +11,135 @@ import {
 } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
-import { getMarketIdBySymbol } from '@/shared/api/client'
-import { getWsSession } from '@/shared/api/decidash-websocket'
+import {
+  getMarketDepth,
+  getMarketIdBySymbol,
+} from './queries'
+
+// ============================================
+// WebSocket Session Management
+// ============================================
+
+/**
+ * 개별 WebSocket 세션 생성 (테스트용)
+ */
+export function createWsSession(
+  config: DeciDashConfig = DeciDashConfig.DEVNET,
+) {
+  const session = new WSAPISession({
+    wsURL: config.tradingVM.WSURL,
+    WebSocketCtor: config.WebSocketCtor,
+  })
+  return {
+    session,
+    connect: () => session.connect(),
+    disconnect: () => {
+      try {
+        session.disconnect()
+      } catch (error) {
+        // ignore disconnect error
+        console.warn('WebSocket disconnect error:', error)
+      }
+    },
+    subscribeMarketPrice: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketPrice> =>
+      session.subscribeMarketPrice(market),
+    subscribeMarketDepth: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketDepth> =>
+      session.subscribeMarketDepth(market),
+  }
+}
+
+// 싱글톤 WS 세션
+let singleton: WSAPISession | null = null
+// 전역 connectPromise로 중복 connect 방지
+let globalConnectPromise: Promise<void> | null = null
+// StrictMode 마운트/언마운트 떨림을 흡수하기 위한 지연 disconnect 타이머
+let disconnectTimer: ReturnType<typeof setTimeout> | null =
+  null
+
+/**
+ * 싱글톤 WebSocket 세션 가져오기
+ * React StrictMode와 호환되도록 ref-counting 구현
+ */
+export function getWsSession(
+  config: DeciDashConfig = DeciDashConfig.DEVNET,
+) {
+  if (!singleton) {
+    singleton = new WSAPISession({
+      wsURL: config.tradingVM.WSURL,
+      WebSocketCtor: config.WebSocketCtor,
+    })
+  }
+
+  // StrictMode로 인한 mount/unmount 이중 호출을 견디도록 ref-count 도입
+  // 전역 refCount를 모듈 스코프에서 유지
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(getWsSession as any)._refCount =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (getWsSession as any)._refCount ?? 0
+
+  async function connect(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(getWsSession as any)._refCount++
+    // 빠르게 재마운트될 때 즉시 disconnect 되지 않도록 대기 중 타이머가 있으면 취소
+    if (disconnectTimer) {
+      clearTimeout(disconnectTimer)
+      disconnectTimer = null
+    }
+    if (!globalConnectPromise) {
+      globalConnectPromise = singleton!
+        .connect()
+        .catch((e: unknown) => {
+          globalConnectPromise = null
+          throw e
+        })
+    }
+    return globalConnectPromise
+  }
+
+  function disconnect(): void {
+    const next = Math.max(
+      0,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((getWsSession as any)._refCount as number) - 1,
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(getWsSession as any)._refCount = next
+    if (next === 0) {
+      // StrictMode에서 즉시 닫으면 CLOSING 상태에 걸릴 수 있어 약간 지연 후 닫기
+      if (disconnectTimer) {
+        clearTimeout(disconnectTimer)
+      }
+      disconnectTimer = setTimeout(() => {
+        try {
+          singleton!.disconnect()
+        } catch (error) {
+          console.warn('WebSocket disconnect error:', error)
+        } finally {
+          globalConnectPromise = null
+          disconnectTimer = null
+        }
+      }, 500)
+    }
+  }
+
+  return {
+    session: singleton,
+    connect,
+    disconnect,
+    subscribeMarketPrice: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketPrice> =>
+      singleton!.subscribeMarketPrice(market),
+    subscribeMarketDepth: (
+      market: string,
+    ): AsyncIterable<WebsocketResponseMarketDepth> =>
+      singleton!.subscribeMarketDepth(market),
+  }
+}
 
 // ============================================
 // WebSocket 방식 React Query Hooks
@@ -95,7 +223,8 @@ export const useMarketPriceStream = (
       setIsConnected(false)
       disconnect()
     }
-  }, [marketSymbol, config, queryClient])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketSymbol, config])
 
   return {
     ...query,
@@ -129,11 +258,9 @@ export const useMarketDepthStream = (
 ) => {
   const queryClient = useQueryClient()
   const [marketDepth, setMarketDepth] =
-    useState<MarketDepth>({
-      bids: [],
-      asks: [],
-    })
+    useState<MarketDepth | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
   const queryKey: QueryKey = [
@@ -148,7 +275,7 @@ export const useMarketDepthStream = (
     queryFn: async () => {
       return marketDepth
     },
-    enabled: false, // WebSocket으로만 업데이트
+    enabled: !!marketDepth, // 데이터가 있을 때만 활성화
     staleTime: Infinity,
   })
 
@@ -162,11 +289,89 @@ export const useMarketDepthStream = (
     const subscribe = async () => {
       try {
         setError(null)
+        setIsInitialLoad(true)
+
+        // 1. 먼저 HTTP API로 초기 데이터 가져오기
+        const marketId =
+          await getMarketIdBySymbol(marketSymbol)
+
+        try {
+          const httpDepth = await getMarketDepth(
+            marketId,
+            depth,
+            config,
+          )
+
+          // HTTP 응답을 MarketDepth 형식으로 변환
+          const bidsArray: Array<{
+            price: number
+            size: number
+          }> = Array.isArray(httpDepth.bids)
+            ? httpDepth.bids
+            : []
+          const asksArray: Array<{
+            price: number
+            size: number
+          }> = Array.isArray(httpDepth.asks)
+            ? httpDepth.asks
+            : []
+
+          const initialBids = bidsArray
+            .slice(0, depth)
+            .map((item, idx) => ({
+              price: item.price,
+              size: item.size,
+              total: bidsArray
+                .slice(0, idx + 1)
+                .reduce((acc, b) => acc + b.size, 0),
+            }))
+
+          const initialAsks = asksArray
+            .slice(0, depth)
+            .map((item, idx) => ({
+              price: item.price,
+              size: item.size,
+              total: asksArray
+                .slice(0, idx + 1)
+                .reduce((acc, a) => acc + a.size, 0),
+            }))
+
+          const initialDepth: MarketDepth = {
+            bids: initialBids,
+            asks: initialAsks,
+            bestBid: initialBids[0]?.price,
+            bestAsk: initialAsks[0]?.price,
+            spread:
+              initialBids[0] && initialAsks[0]
+                ? initialAsks[0].price -
+                  initialBids[0].price
+                : undefined,
+            spreadPercent:
+              initialBids[0] &&
+              initialAsks[0] &&
+              initialAsks[0].price > 0
+                ? ((initialAsks[0].price -
+                    initialBids[0].price) /
+                    initialAsks[0].price) *
+                  100
+                : undefined,
+          }
+
+          setMarketDepth(initialDepth)
+          queryClient.setQueryData(queryKey, initialDepth)
+          setIsInitialLoad(false)
+        } catch (httpError) {
+          console.warn(
+            '[HTTP] Failed to fetch initial depth, will wait for WebSocket:',
+            httpError,
+          )
+          // HTTP 실패해도 계속 진행 (WebSocket에서 데이터 받을 것)
+        }
+
+        // 2. WebSocket 연결 및 실시간 업데이트 구독
         await connect()
         setIsConnected(true)
 
-        const marketId =
-          await getMarketIdBySymbol(marketSymbol)
         const stream = subscribeMarketDepth(marketId)
 
         for await (const msg of stream as AsyncIterable<WebsocketResponseMarketDepth>) {
@@ -250,10 +455,14 @@ export const useMarketDepthStream = (
 
           setMarketDepth(depthData)
 
+          // WebSocket 데이터를 받으면 확실히 로딩 완료
+          setIsInitialLoad(false)
+
           // react-query 캐시 업데이트
           queryClient.setQueryData(queryKey, depthData)
         }
       } catch (err) {
+        console.error('[WebSocket] Error:', err)
         if (!cancelled) {
           setError(
             err instanceof Error
@@ -261,6 +470,7 @@ export const useMarketDepthStream = (
               : new Error('WebSocket connection failed'),
           )
           setIsConnected(false)
+          setIsInitialLoad(false)
         }
       }
     }
@@ -270,13 +480,16 @@ export const useMarketDepthStream = (
     return () => {
       cancelled = true
       setIsConnected(false)
+      setIsInitialLoad(true)
       disconnect()
     }
-  }, [marketSymbol, depth, config, queryClient])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketSymbol, depth, config])
 
   return {
     ...query,
     data: marketDepth,
+    isLoading: isInitialLoad, // 초기 로딩 상태
     isConnected,
     error,
   }
@@ -342,6 +555,7 @@ export const useCandlestickRealtimeUpdater = (
 
           queryClient.setQueryData(
             candlestickQueryKey,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (oldData: any[] | undefined) => {
               if (!oldData || oldData.length === 0)
                 return oldData

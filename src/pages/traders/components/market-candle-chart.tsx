@@ -9,14 +9,13 @@ import {
 } from 'lightweight-charts'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { getMarketIdBySymbol } from '@/shared/api/client'
-import { getWsSession } from '@/shared/api/decidash-websocket'
-
 // 새로운 API 사용
 import {
   type MarketCandlesticksInterval,
   useMarketCandlesticks,
 } from '../api'
+import { getMarketIdBySymbol } from '../api/queries'
+import { getWsSession } from '../api/websocket-hooks'
 
 type Props = {
   symbol?: string
@@ -43,17 +42,6 @@ export default function MarketCandleChart({
   > | null>(null)
   const seriesRef =
     useRef<ISeriesApi<'Candlestick'> | null>(null)
-  const [uiInterval, setUiInterval] = useState<
-    '5m' | '15m' | '1h' | '1d'
-  >(
-    interval === '1d'
-      ? '1d'
-      : interval === '15m'
-        ? '15m'
-        : interval === '1h'
-          ? '1h'
-          : '5m',
-  )
 
   // 마켓 ID 가져오기
   useEffect(() => {
@@ -81,29 +69,12 @@ export default function MarketCandleChart({
   const { startTime, endTime } = useMemo(() => {
     const bars = 180
     const now = Date.now()
-    const ms =
-      uiInterval === '5m'
-        ? 5 * 60_000
-        : intervalToMs(
-            (uiInterval === '15m'
-              ? '15m'
-              : uiInterval === '1h'
-                ? '1h'
-                : '1d') as MarketCandlesticksInterval,
-          )
+    const ms = intervalToMs(interval)
     return { startTime: now - bars * ms, endTime: now }
-  }, [uiInterval])
+  }, [interval])
 
   // 새로운 API 사용: 캔들스틱 데이터 가져오기
-  const apiInterval: MarketCandlesticksInterval = (
-    uiInterval === '5m'
-      ? '1m'
-      : uiInterval === '15m'
-        ? '15m'
-        : uiInterval === '1h'
-          ? '1h'
-          : '1d'
-  ) as MarketCandlesticksInterval
+  const apiInterval: MarketCandlesticksInterval = interval
   const { data, isLoading } = useMarketCandlesticks(
     symbol,
     apiInterval,
@@ -170,43 +141,10 @@ export default function MarketCandleChart({
     }
   }, [theme, loading])
 
-  // set data when fetched (5m은 클라이언트 집계)
+  // set data when fetched
   useEffect(() => {
     if (loading || !data || !seriesRef.current) return
-    let base = data.slice().sort((a, b) => a.t - b.t)
-    if (uiInterval === '5m') {
-      const bucketMs = 5 * 60_000
-      const buckets: Record<
-        number,
-        {
-          t: number
-          o: number
-          h: number
-          l: number
-          c: number
-        }
-      > = {}
-      for (const c of base) {
-        const bt = Math.floor(c.t / bucketMs) * bucketMs
-        const ex = buckets[bt]
-        if (!ex)
-          buckets[bt] = {
-            t: bt,
-            o: c.o,
-            h: c.h,
-            l: c.l,
-            c: c.c,
-          }
-        else {
-          ex.h = Math.max(ex.h, c.h)
-          ex.l = Math.min(ex.l, c.l)
-          ex.c = c.c
-        }
-      }
-      base = Object.values(buckets).sort(
-        (a, b) => a.t - b.t,
-      ) as typeof base
-    }
+    const base = data.slice().sort((a, b) => a.t - b.t)
     const mapped: CandlestickData<UTCTimestamp>[] =
       base.map(
         (c: {
@@ -225,23 +163,14 @@ export default function MarketCandleChart({
       )
     seriesRef.current.setData(mapped)
     chartRef.current?.timeScale().fitContent()
-  }, [data, uiInterval, loading, marketId])
+  }, [data, interval, loading, marketId])
 
-  // live updates via WebSocket market_price stream (버킷은 uiInterval 기준)
+  // live updates via WebSocket market_price stream
   useEffect(() => {
     if (loading || !seriesRef.current) return
     if (!marketId) return
 
-    const ms =
-      uiInterval === '5m'
-        ? 5 * 60_000
-        : intervalToMs(
-            uiInterval === '15m'
-              ? '15m'
-              : uiInterval === '1h'
-                ? '1h'
-                : '1d',
-          )
+    const ms = intervalToMs(interval)
     let lastBar: CandlestickData<UTCTimestamp> | null = null
     const series = seriesRef.current
     const { connect, disconnect, subscribeMarketPrice } =
@@ -308,23 +237,16 @@ export default function MarketCandleChart({
       cancelled = true
       disconnect()
     }
-  }, [marketId, uiInterval, data, loading, symbol])
+  }, [marketId, interval, data, loading, symbol])
 
   // 로딩 중이거나 에러가 있으면 (모든 훅 호출 후) 반환
   if (loading || error || !marketId) {
     return (
-      <div
-        className={`rounded border ${theme === 'dark' ? 'border-gray-700 bg-[#0f1115]' : 'border-gray-200 bg-white'} p-4 shadow-sm`}
-      >
-        <div
-          className={`mb-2 text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
-        >
-          {symbol} 캔들 ({uiInterval})
-        </div>
-        <div className="flex h-64 items-center justify-center text-gray-400">
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="text-sm text-white/40">
           {loading
-            ? '마켓 정보를 로딩 중...'
-            : error || '마켓 정보를 가져올 수 없습니다'}
+            ? 'Loading chart...'
+            : error || 'Unable to load chart'}
         </div>
       </div>
     )
@@ -332,34 +254,8 @@ export default function MarketCandleChart({
 
   return (
     <div
-      className={`rounded border ${theme === 'dark' ? 'border-gray-700 bg-[#0f1115]' : 'border-gray-200 bg-white'} p-4 shadow-sm ${height === 'parent' ? 'flex h-full flex-col' : ''}`}
+      className={`${height === 'parent' ? 'flex h-full flex-col' : ''}`}
     >
-      <div
-        className={`mb-2 flex items-center justify-between text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
-      >
-        <span>
-          {symbol} 캔들 ({uiInterval})
-        </span>
-        <div className="flex items-center gap-3 text-xs">
-          {(['5m', '15m', '1h', '1d'] as const).map(
-            (itv) => (
-              <button
-                key={itv}
-                onClick={() => setUiInterval(itv)}
-                className={
-                  itv === uiInterval
-                    ? 'font-semibold text-yellow-300'
-                    : theme === 'dark'
-                      ? 'text-gray-400 hover:text-gray-200'
-                      : 'text-gray-500 hover:text-gray-700'
-                }
-              >
-                {itv === '1d' ? 'D' : itv}
-              </button>
-            ),
-          )}
-        </div>
-      </div>
       <div
         ref={containerRef}
         className={
@@ -379,24 +275,20 @@ export default function MarketCandleChart({
         }}
       />
       {isLoading && (
-        <div
-          className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}
-        >
-          차트 로딩...
+        <div className="mt-2 text-xs text-white/40">
+          Loading candles...
         </div>
       )}
       {error && (
-        <div className="mt-2 text-xs text-red-600">
-          에러: {error}
+        <div className="mt-2 text-xs text-red-400">
+          Error: {error}
         </div>
       )}
       {!isLoading &&
         !error &&
         (!data || data.length === 0) && (
-          <div
-            className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}
-          >
-            표시할 캔들 데이터가 없습니다.
+          <div className="mt-2 text-xs text-white/40">
+            No candle data available
           </div>
         )}
     </div>
