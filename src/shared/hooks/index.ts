@@ -1,1 +1,1 @@
-// Hooks will be exported here when needed
+export { useWallet } from './use-wallet'

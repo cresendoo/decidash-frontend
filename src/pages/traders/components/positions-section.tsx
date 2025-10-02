@@ -1,5 +1,7 @@
 import type { UserPosition } from '@coldbell/decidash-ts-sdk'
 
+import { useWallet } from '@/shared/hooks'
+
 import { useUserPositions } from '../api'
 
 /**
@@ -170,8 +172,8 @@ function PositionRow({
 }
 
 export default function PositionsSection() {
-  // Wallet connection disabled - use null for now
-  const account = null
+  // Aptos 지갑에서 사용자 주소 가져오기
+  const { account } = useWallet()
 
   const {
     data: positions,

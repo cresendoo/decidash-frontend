@@ -1,11 +1,20 @@
+import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+
+import { useWallet } from '@/shared/hooks'
 
 import { Button } from '../components/button'
 
 export default function Header() {
-  // Wallet connection temporarily disabled
-  const connected = false
-  const account = null
+  const {
+    account,
+    connected,
+    wallets,
+    connect,
+    disconnect,
+  } = useWallet()
+  const [showWalletModal, setShowWalletModal] =
+    useState(false)
 
   const nav = [
     { to: '/traders', label: 'Trade' },
@@ -17,12 +26,13 @@ export default function Header() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  const handleConnect = () => {
-    console.log('Wallet connection will be implemented')
+  const handleConnect = (walletName: string) => {
+    connect(walletName)
+    setShowWalletModal(false)
   }
 
   const handleDisconnect = () => {
-    console.log('Wallet disconnection will be implemented')
+    disconnect()
   }
 
   return (
@@ -121,15 +131,66 @@ export default function Header() {
           </button>
           {/* 지갑 연결 버튼 */}
           {!connected ? (
-            <Button
-              variant="primary"
-              size="sm"
-              className="h-9 rounded-lg px-4"
-              onClick={handleConnect}
-              data-node-id="1641:251"
-            >
-              Connect Wallet
-            </Button>
+            <div className="relative">
+              <Button
+                variant="primary"
+                size="sm"
+                className="h-9 rounded-lg px-4"
+                onClick={() =>
+                  setShowWalletModal(!showWalletModal)
+                }
+                data-node-id="1641:251"
+              >
+                Connect Wallet
+              </Button>
+
+              {/* 지갑 선택 모달 */}
+              {showWalletModal && (
+                <>
+                  {/* 배경 오버레이 */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() =>
+                      setShowWalletModal(false)
+                    }
+                  />
+                  {/* 모달 */}
+                  <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-lg border border-stone-800 bg-stone-950 p-4 shadow-xl">
+                    <h3 className="mb-3 text-sm font-semibold text-white">
+                      Connect a Wallet
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {wallets.map((wallet) => (
+                        <button
+                          key={wallet.name}
+                          onClick={() =>
+                            handleConnect(wallet.name)
+                          }
+                          className="flex items-center gap-3 rounded-lg border border-stone-800 bg-stone-900/50 px-4 py-3 text-left transition-colors hover:bg-stone-800"
+                        >
+                          {wallet.icon && (
+                            <img
+                              src={wallet.icon}
+                              alt={wallet.name}
+                              className="h-6 w-6 rounded"
+                            />
+                          )}
+                          <span className="text-sm text-white">
+                            {wallet.name}
+                          </span>
+                        </button>
+                      ))}
+                      {wallets.length === 0 && (
+                        <p className="text-xs text-white/60">
+                          No wallets detected. Please
+                          install a wallet extension.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-xs text-white/70">
