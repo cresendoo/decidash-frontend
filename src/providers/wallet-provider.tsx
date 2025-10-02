@@ -25,7 +25,7 @@ export function WalletProvider({
 }: WalletProviderProps) {
   return (
     <AptosWalletAdapterProvider
-      autoConnect={true}
+      autoConnect={false}
       onError={(error) => {
         console.error('Wallet connection error:', error)
       }}

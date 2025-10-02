@@ -28,7 +28,7 @@ export default function Traders() {
           <Panel defaultSize={80} minSize={20}>
             <TradingSection />
           </Panel>
-          <PanelResizeHandle />
+          <PanelResizeHandle className="h-[2px] bg-stone-800 transition-colors hover:bg-stone-600" />
           {/* 하단 통합 섹션: Tabs (Positions / Trade History) */}
           <Panel defaultSize={20} minSize={20}>
             <div className="flex h-full min-h-0 flex-col">
@@ -70,7 +70,7 @@ export default function Traders() {
         </PanelGroup>
       </Panel>
 
-      <PanelResizeHandle />
+      <PanelResizeHandle className="w-[2px] bg-stone-800 transition-colors hover:bg-stone-600" />
 
       {/* 오른쪽 사이드바: Trade section */}
       <Panel defaultSize={30} minSize={20}>

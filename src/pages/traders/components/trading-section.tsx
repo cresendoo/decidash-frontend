@@ -1,4 +1,9 @@
 import { useState } from 'react'
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from 'react-resizable-panels'
 
 import {
   type MarketCandlesticksInterval,
@@ -130,32 +135,40 @@ export default function TradingSection() {
 
       {/* 차트와 주문 영역 */}
       <div className="flex min-h-0 flex-1 rounded-[2px] bg-stone-950">
-        {/* 차트 영역 */}
-        <div className="flex min-h-0 flex-1 flex-col">
-          {/* 차트 컨트롤 */}
-          <ChartControls
-            selectedInterval={selectedInterval}
-            onIntervalChange={setSelectedInterval}
-          />
+        <PanelGroup direction="horizontal">
+          {/* 차트 영역 */}
+          <Panel defaultSize={70} minSize={30}>
+            <div className="flex h-full min-h-0 flex-col">
+              {/* 차트 컨트롤 */}
+              <ChartControls
+                selectedInterval={selectedInterval}
+                onIntervalChange={setSelectedInterval}
+              />
 
-          {/* 차트 */}
-          <div className="min-h-0 flex-1 p-4">
-            <MarketCandleChart
-              symbol={selectedMarket}
-              interval={intervalToChartFormat(
-                selectedInterval,
-              )}
-              minutes={180}
-              height="parent"
-              theme="dark"
-            />
-          </div>
-        </div>
+              {/* 차트 */}
+              <div className="min-h-0 flex-1 p-4">
+                <MarketCandleChart
+                  symbol={selectedMarket}
+                  interval={intervalToChartFormat(
+                    selectedInterval,
+                  )}
+                  minutes={180}
+                  height="parent"
+                  theme="dark"
+                />
+              </div>
+            </div>
+          </Panel>
 
-        {/* 주문 영역 - 독립적으로 로딩 상태 관리 */}
-        <div className="flex min-h-0 w-80 flex-col border-l border-stone-800">
-          <TradingOrder />
-        </div>
+          <PanelResizeHandle className="w-[2px] bg-stone-800 transition-colors hover:bg-stone-600" />
+
+          {/* 주문 영역 - 독립적으로 로딩 상태 관리 */}
+          <Panel defaultSize={30} minSize={20}>
+            <div className="flex h-full min-h-0 flex-col">
+              <TradingOrder />
+            </div>
+          </Panel>
+        </PanelGroup>
       </div>
     </div>
   )
