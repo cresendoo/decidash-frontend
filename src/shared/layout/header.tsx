@@ -1,12 +1,35 @@
 import { Link, NavLink } from 'react-router-dom'
 
-import { Button } from '@/components/ui'
+import { useWallet } from '@/shared/hooks'
+
+import { Button } from '../components/button'
 
 export default function Header() {
+  const {
+    account,
+    connected,
+    wallets,
+    connect,
+    disconnect,
+  } = useWallet()
+
   const nav = [
     { to: '/traders', label: 'Trade' },
     { to: '/top-traders', label: 'Top Traders' },
   ]
+
+  // 주소를 짧게 표시 (예: 0x1234...5678)
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
+  // 첫 번째 사용 가능한 지갑으로 연결
+  const handleConnect = () => {
+    if (wallets.length > 0) {
+      connect(wallets[0].name)
+    }
+  }
+
   return (
     <header
       className="sticky top-0 z-10 bg-stone-950"
@@ -101,14 +124,32 @@ export default function Header() {
               />
             </svg>
           </button>
-          <Button
-            variant="primary"
-            size="sm"
-            className="h-9 rounded-lg px-4"
-            data-node-id="1641:251"
-          >
-            Connect
-          </Button>
+          {/* 지갑 연결 버튼 */}
+          {!connected ? (
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-9 rounded-lg px-4"
+              onClick={handleConnect}
+              data-node-id="1641:251"
+            >
+              Connect Wallet
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/70">
+                {account && formatAddress(account)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-lg px-4"
+                onClick={disconnect}
+              >
+                Disconnect
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

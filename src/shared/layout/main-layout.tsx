@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom'
 
-import ThemeProvider from '@/shared/theme/ThemeProvider'
+import ThemeProvider from '@/shared/theme/theme-provider'
 
 import Header from './header'
 
