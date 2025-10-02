@@ -35,25 +35,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const baseClasses =
-      'inline-flex items-center justify-center text-xs font-medium text-stone-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+      'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
 
     const variantClasses = {
       primary:
-        'bg-primary-default text-stone-950 hover:bg-primary-hover focus:bg-primary-hover',
+        'bg-[#ede030] text-stone-950 hover:bg-[#f6eb61] active:bg-[#f6eb61] focus-visible:ring-[#ede030]',
       secondary:
-        'bg-secondary-default text-fg-default hover:bg-secondary-hover focus:bg-secondary-hover',
+        'bg-stone-900 text-white hover:bg-stone-800 active:bg-stone-800 focus-visible:ring-stone-800',
       outline:
-        'border border-border-default bg-transparent text-fg-default hover:bg-bg-surface focus:bg-bg-surface',
+        'border border-stone-800 bg-transparent text-white hover:bg-stone-900 active:bg-stone-900 focus-visible:ring-stone-800',
       ghost:
-        'text-fg-default hover:bg-bg-surface focus:bg-bg-surface',
+        'text-white hover:bg-stone-900 active:bg-stone-900',
       destructive:
-        'bg-etc-red text-white hover:bg-red-600 focus:bg-red-600',
+        'bg-red-500 text-white hover:bg-red-600 active:bg-red-600 focus-visible:ring-red-500',
     }
 
     const sizeClasses = {
-      sm: 'h-8 p-2 text-xs rounded-md gap-1',
-      md: 'h-10 p-4 text-sm rounded-md gap-1',
-      lg: 'h-12 p-6 text-base rounded-md gap-1',
+      sm: 'h-9 px-4 text-xs gap-2 rounded-lg',
+      md: 'h-10 px-4 text-sm gap-2 rounded-lg',
+      lg: 'h-12 px-6 text-base gap-2 rounded-lg',
     }
 
     const widthClass = fullWidth ? 'w-full' : ''
@@ -98,14 +98,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && leftIcon && (
           <span className="flex-shrink-0">{leftIcon}</span>
         )}
-        <span
-          className={cn(
-            loading && 'ml-2',
-            !loading && leftIcon && 'ml-1.5',
-          )}
-        >
-          {children}
-        </span>
+        <span>{children}</span>
         {!loading && rightIcon && (
           <span className="flex-shrink-0">{rightIcon}</span>
         )}
