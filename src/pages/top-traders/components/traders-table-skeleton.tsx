@@ -1,69 +1,190 @@
+import { Card, CardContent } from '@/shared/components'
+import {
+  DataTable,
+  DataTableCell,
+  DataTableFooter,
+  DataTableHeader,
+  DataTableHeaderCell,
+  DataTableRow,
+} from '@/shared/components'
+
+/**
+ * TradersTable 스켈레톤 컴포넌트
+ *
+ * 첫 로딩 시에만 표시됩니다.
+ */
 export default function TradersTableSkeleton() {
+  // 10개의 스켈레톤 행 생성
+  const skeletonRows = Array.from(
+    { length: 10 },
+    (_, i) => i,
+  )
+
   return (
-    <section className="rounded-lg border border-gray-800 bg-[#0f1115] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm font-medium text-gray-300">
-          Traders
+    <Card className="p-6">
+      <CardContent
+        layout="custom"
+        className="flex w-full flex-col gap-6"
+      >
+        {/* Header Section */}
+        <div className="flex w-full shrink-0 items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-20 animate-pulse rounded bg-white/10" />
+            <div className="size-3.5 animate-pulse rounded bg-white/10" />
+            <div className="h-4 w-32 animate-pulse rounded bg-white/10" />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-[220px] animate-pulse rounded-lg bg-white/10" />
+            <div className="h-9 w-24 animate-pulse rounded-lg bg-white/10" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            className="rounded bg-gray-900 px-3 py-1 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
-            placeholder="Search by address..."
-          />
-          <button className="rounded border border-gray-700 px-2 py-1 text-xs text-gray-300 hover:bg-gray-800">
-            Filters
-          </button>
-        </div>
-      </div>
-      <div className="overflow-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-900/60">
-            <tr className="text-left text-gray-400">
-              <th className="px-4 py-2">Trader</th>
-              <th className="px-4 py-2">Perp Equity</th>
-              <th className="px-4 py-2">Main Position</th>
-              <th className="px-4 py-2">Direction Bias</th>
-              <th className="px-4 py-2">Daily PnL</th>
-              <th className="px-4 py-2">Weekly PnL</th>
-              <th className="px-4 py-2">30D PnL</th>
-              <th className="px-4 py-2">All Time PnL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <tr
-                key={i}
-                className="border-t border-gray-800"
+
+        {/* Table */}
+        <div className="w-full overflow-x-auto">
+          <DataTable>
+            {/* Table Header */}
+            <DataTableHeader>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={220}
               >
-                <td className="px-4 py-3">
-                  <div className="h-4 w-28 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-20 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-20 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-20 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-20 animate-pulse rounded bg-gray-800" />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="h-4 w-20 animate-pulse rounded bg-gray-800" />
-                </td>
-              </tr>
+                Trader
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={112}
+              >
+                Perp Equity
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="fixed"
+                fixedWidth={220}
+              >
+                Main Position
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="fixed"
+                fixedWidth={220}
+              >
+                Direction Bias
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={112}
+              >
+                Daily PnL
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={112}
+              >
+                Weekly PnL
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={112}
+              >
+                30D PnL
+              </DataTableHeaderCell>
+              <DataTableHeaderCell
+                width="grow"
+                minWidth={112}
+              >
+                All Time PnL
+              </DataTableHeaderCell>
+            </DataTableHeader>
+
+            {/* Skeleton Rows */}
+            {skeletonRows.map((i) => (
+              <DataTableRow key={i} hoverable={false}>
+                {/* Trader */}
+                <DataTableCell width="grow" minWidth={220}>
+                  <div className="size-6 animate-pulse rounded-full bg-white/10" />
+                  <div className="h-5 w-24 animate-pulse rounded bg-white/10" />
+                  <div className="size-4 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* Perp Equity */}
+                <DataTableCell width="grow" minWidth={112}>
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* Main Position */}
+                <DataTableCell
+                  width="fixed"
+                  fixedWidth={220}
+                >
+                  <div className="h-6 w-16 animate-pulse rounded-lg bg-white/10" />
+                  <div className="h-5 w-12 animate-pulse rounded bg-white/10" />
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* Direction Bias */}
+                <DataTableCell
+                  width="fixed"
+                  fixedWidth={220}
+                >
+                  <div className="h-1.5 w-20 animate-pulse rounded-full bg-white/10" />
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* Daily PnL */}
+                <DataTableCell
+                  width="grow"
+                  minWidth={112}
+                  className="flex-col items-start justify-center gap-0.5"
+                >
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                  <div className="h-4 w-12 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* Weekly PnL */}
+                <DataTableCell
+                  width="grow"
+                  minWidth={112}
+                  className="flex-col items-start justify-center gap-0.5"
+                >
+                  <div className="h-5 w-16 animate-pulse rounded bg-white/10" />
+                  <div className="h-4 w-12 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* 30D PnL */}
+                <DataTableCell
+                  width="grow"
+                  minWidth={112}
+                  className="flex-col items-start justify-center gap-0.5"
+                >
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                  <div className="h-4 w-12 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+
+                {/* All Time PnL */}
+                <DataTableCell
+                  width="grow"
+                  minWidth={112}
+                  className="flex-col items-start justify-center gap-0.5"
+                >
+                  <div className="h-5 w-20 animate-pulse rounded bg-white/10" />
+                  <div className="h-4 w-12 animate-pulse rounded bg-white/10" />
+                </DataTableCell>
+              </DataTableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+
+            {/* Footer */}
+            <DataTableFooter>
+              <div className="flex h-full items-center gap-2 px-4 pt-4">
+                <div className="h-5 w-28 animate-pulse rounded bg-white/10" />
+                <div className="h-9 w-16 animate-pulse rounded-lg bg-white/10" />
+              </div>
+              <div className="flex h-full items-center gap-2 pt-4">
+                <div className="size-9 animate-pulse rounded-lg bg-white/10" />
+                <div className="h-5 w-24 animate-pulse rounded bg-white/10" />
+                <div className="size-9 animate-pulse rounded-lg bg-white/10" />
+              </div>
+            </DataTableFooter>
+          </DataTable>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

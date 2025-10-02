@@ -1,5 +1,10 @@
 import { useTradersDashboard } from '../api'
 import MarketSummarySkeleton from './market-summary-skeleton'
+import {
+  Card,
+  CardContent,
+  CardTitle,
+} from '@/shared/components'
 
 // ============================================
 // 상태별 컴포넌트들
@@ -21,14 +26,9 @@ function MarketSummaryError({
         'Asset Concentration',
         'Trader Profitability',
       ].map((title, index) => (
-        <div
-          key={index}
-          className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6"
-        >
-          <div className="flex flex-col items-start justify-between">
-            <p className="text-xs leading-4 text-white/60">
-              {title.toUpperCase()}
-            </p>
+        <Card key={index} minHeight="min-h-[140px]">
+          <CardContent>
+            <CardTitle>{title.toUpperCase()}</CardTitle>
             <div className="flex flex-col gap-1">
               <p className="text-sm text-white/40">
                 데이터를 불러올 수 없습니다
@@ -40,8 +40,8 @@ function MarketSummaryError({
               )}
             </div>
             <div />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </section>
   )
@@ -59,20 +59,15 @@ function MarketSummaryEmpty() {
         'Asset Concentration',
         'Trader Profitability',
       ].map((title, index) => (
-        <div
-          key={index}
-          className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6"
-        >
-          <div className="flex flex-col items-start justify-between">
-            <p className="text-xs leading-4 text-white/60">
-              {title.toUpperCase()}
-            </p>
+        <Card key={index} minHeight="min-h-[140px]">
+          <CardContent>
+            <CardTitle>{title.toUpperCase()}</CardTitle>
             <p className="text-sm text-white/40">
               데이터 없음
             </p>
             <div />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </section>
   )
@@ -154,11 +149,9 @@ export default function MarketSummary() {
       )}
 
       {/* Market Sentiment */}
-      <div className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6">
-        <div className="flex flex-col items-start justify-between">
-          <p className="text-xs leading-4 text-white/60">
-            MARKET SENTIMENT
-          </p>
+      <Card minHeight="min-h-[140px]">
+        <CardContent>
+          <CardTitle>MARKET SENTIMENT</CardTitle>
           <p className="text-2xl font-medium leading-8 text-[#00c951]">
             {formatPercentage(
               market_sentiment.long_percentage,
@@ -176,15 +169,13 @@ export default function MarketSummary() {
               Based on total position value
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Top Performer Main Position */}
-      <div className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6">
-        <div className="flex flex-col items-start justify-between">
-          <p className="text-xs leading-4 text-white/60">
-            TOP PERFORMER MAIN POSITION
-          </p>
+      <Card minHeight="min-h-[140px]">
+        <CardContent>
+          <CardTitle>TOP PERFORMER MAIN POSITION</CardTitle>
           <p className="text-2xl font-medium leading-8 text-white">
             {top_performer_main_position.asset || 'N/A'}
           </p>
@@ -196,15 +187,16 @@ export default function MarketSummary() {
               Highest 24h return on investment
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Asset Concentration */}
-      <div className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6">
-        <div className="flex w-full flex-col items-start gap-6">
-          <p className="text-xs leading-4 text-white/60">
-            ASSET CONCENTRATION
-          </p>
+      <Card minHeight="min-h-[140px]">
+        <CardContent
+          layout="custom"
+          className="flex w-full flex-col items-start gap-6"
+        >
+          <CardTitle>ASSET CONCENTRATION</CardTitle>
           <div className="flex w-full items-start gap-4">
             <div className="flex flex-1 flex-col gap-1">
               <p className="text-xs leading-4 text-white/40">
@@ -245,15 +237,13 @@ export default function MarketSummary() {
               asset_concentration.total_monitored,
             )}
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Trader Profitability */}
-      <div className="flex min-h-[140px] min-w-0 flex-1 rounded-3xl border border-stone-800 p-6">
-        <div className="flex flex-col items-start justify-between">
-          <p className="text-xs leading-4 text-white/60">
-            TRADER PROFITABILITY
-          </p>
+      <Card minHeight="min-h-[140px]">
+        <CardContent>
+          <CardTitle>TRADER PROFITABILITY</CardTitle>
           <p className="text-2xl font-medium leading-8 text-white">
             {formatPercentage(
               trader_profitability.profitable_percentage,
@@ -272,8 +262,8 @@ export default function MarketSummary() {
               )}
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </section>
   )
 }
