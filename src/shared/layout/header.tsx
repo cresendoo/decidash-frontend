@@ -1,11 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 import { useWallet } from '@/shared/hooks'
 
 import { Button } from '../components/button'
+import { MobileHeader } from '../components/mobile-header'
 
 export default function Header() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () =>
+      window.removeEventListener('resize', checkMobile)
+  }, [])
   const {
     account,
     connected,
@@ -33,6 +47,11 @@ export default function Header() {
 
   const handleDisconnect = () => {
     disconnect()
+  }
+
+  // 모바일일 경우 MobileHeader 렌더링
+  if (isMobile) {
+    return <MobileHeader />
   }
 
   return (
