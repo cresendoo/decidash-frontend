@@ -119,16 +119,21 @@ export default function MarketSummary() {
 
   // 숫자 포맷팅 헬퍼
   const formatCurrency = (value: number): string => {
-    if (value >= 1_000_000_000) {
-      return `$${(value / 1_000_000_000).toFixed(2)}B`
+    const isNegative = value < 0
+    const absValue = Math.abs(value)
+
+    let formatted = ''
+    if (absValue >= 1_000_000_000) {
+      formatted = `$${(absValue / 1_000_000_000).toFixed(2)}B`
+    } else if (absValue >= 1_000_000) {
+      formatted = `$${(absValue / 1_000_000).toFixed(2)}M`
+    } else if (absValue >= 1_000) {
+      formatted = `$${(absValue / 1_000).toFixed(2)}K`
+    } else {
+      formatted = `$${absValue.toFixed(2)}`
     }
-    if (value >= 1_000_000) {
-      return `$${(value / 1_000_000).toFixed(2)}M`
-    }
-    if (value >= 1_000) {
-      return `$${(value / 1_000).toFixed(2)}K`
-    }
-    return `$${value.toFixed(2)}`
+
+    return isNegative ? `-${formatted}` : formatted
   }
 
   const formatPercentage = (value: number): string => {

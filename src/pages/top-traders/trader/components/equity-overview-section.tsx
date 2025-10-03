@@ -14,17 +14,22 @@ import {
 
 const formatCurrency = (value?: number): string => {
   if (value === undefined || value === null) return '-'
+
+  const isNegative = value < 0
   const abs = Math.abs(value)
+
+  let formatted = ''
   if (abs >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(2)}B`
+    formatted = `$${(abs / 1_000_000_000).toFixed(2)}B`
+  } else if (abs >= 1_000_000) {
+    formatted = `$${(abs / 1_000_000).toFixed(2)}M`
+  } else if (abs >= 1_000) {
+    formatted = `$${(abs / 1_000).toFixed(2)}K`
+  } else {
+    formatted = `$${abs.toFixed(2)}`
   }
-  if (abs >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`
-  }
-  if (abs >= 1_000) {
-    return `$${(value / 1_000).toFixed(2)}K`
-  }
-  return `$${value.toFixed(2)}`
+
+  return isNegative ? `-${formatted}` : formatted
 }
 
 const formatPercentage = (value?: number): string => {

@@ -23,6 +23,8 @@ const formatCurrency = (
   value: number | null | undefined,
 ): string => {
   if (value === null || value === undefined) return '-'
+
+  const isNegative = value < 0
   const formatted = Math.abs(value).toLocaleString(
     'en-US',
     {
@@ -30,7 +32,7 @@ const formatCurrency = (
       maximumFractionDigits: 2,
     },
   )
-  return `$${formatted}`
+  return isNegative ? `-$${formatted}` : `$${formatted}`
 }
 
 // ============================================
@@ -342,11 +344,8 @@ export default function AssetPositionsTable({
                       : 'text-[#fb2c36]'
                   }`}
                 >
-                  {position.unrealized_funding >= 0
-                    ? ''
-                    : '-'}
                   {formatCurrency(
-                    Math.abs(position.unrealized_funding),
+                    position.unrealized_funding,
                   )}
                 </p>
               </div>

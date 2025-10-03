@@ -32,17 +32,21 @@ const formatCurrency = (
 ): string => {
   if (value === undefined || value === null) return '$0.00'
 
+  const isNegative = value < 0
   const absValue = Math.abs(value)
+
+  let formatted = ''
   if (absValue >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(2)}B`
+    formatted = `$${(absValue / 1_000_000_000).toFixed(2)}B`
+  } else if (absValue >= 1_000_000) {
+    formatted = `$${(absValue / 1_000_000).toFixed(2)}M`
+  } else if (absValue >= 1_000) {
+    formatted = `$${(absValue / 1_000).toFixed(2)}K`
+  } else {
+    formatted = `$${absValue.toFixed(2)}`
   }
-  if (absValue >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`
-  }
-  if (absValue >= 1_000) {
-    return `$${(value / 1_000).toFixed(2)}K`
-  }
-  return `$${value.toFixed(2)}`
+
+  return isNegative ? `-${formatted}` : formatted
 }
 
 // ============================================
@@ -120,19 +124,22 @@ interface DirectionBiasBarProps {
 function DirectionBiasBar({
   longPercentage,
 }: DirectionBiasBarProps) {
-  const longWidth = Math.round(longPercentage)
-  const isLongDominant = longPercentage >= 50
+  // 항상 Long 기준으로 표시 (Short 비율이면 100 - longPercentage로 계산)
+  const displayPercentage =
+    longPercentage < 50
+      ? Math.round(100 - longPercentage)
+      : Math.round(longPercentage)
 
   return (
     <div className="flex items-center gap-2">
       <div className="relative h-1.5 w-20 overflow-hidden rounded-full border border-white/5">
         <div
           className="h-full bg-green-500"
-          style={{ width: `${longWidth}%` }}
+          style={{ width: `${displayPercentage}%` }}
         />
       </div>
       <p className="text-sm leading-5 text-white/60">
-        {longWidth}% {isLongDominant ? 'Long' : 'Short'}
+        {displayPercentage}% Long
       </p>
     </div>
   )
@@ -276,6 +283,8 @@ export default function TradersTable() {
       sortBy,
       sortDesc,
     })
+
+  console.log('data', data)
 
   // 첫 로딩
   if (isLoading && !data) {
