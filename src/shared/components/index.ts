@@ -1,5 +1,6 @@
 export { Button } from './button'
 export { Card, CardContent, CardTitle } from './card'
+export { Checkbox } from './checkbox'
 export {
   DataTable,
   DataTableCell,
