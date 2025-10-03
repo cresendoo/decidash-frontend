@@ -11,6 +11,24 @@ import {
 } from '@tanstack/react-query'
 
 // ============================================
+// Custom Config for Development (CORS Proxy)
+// ============================================
+
+// 개발 환경에서 CORS 문제를 우회하기 위한 커스텀 설정
+const isDevelopment = import.meta.env.DEV
+
+export const CUSTOM_DEVNET_CONFIG: DeciDashConfig =
+  isDevelopment
+    ? {
+        ...DeciDashConfig.DEVNET,
+        tradingVM: {
+          ...DeciDashConfig.DEVNET.tradingVM,
+          APIURL: '', // 프록시 사용: /api 경로가 자동으로 백엔드로 프록시됨
+        },
+      }
+    : DeciDashConfig.DEVNET
+
+// ============================================
 // Re-export types for convenience
 // ============================================
 export type {
@@ -29,7 +47,7 @@ export type {
  * Market Sentiment, Top Performer, Asset Concentration, Trader Profitability 등의 정보를 포함합니다.
  */
 export const useTradersDashboard = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<DashboardSummary>,
     'queryKey' | 'queryFn'
@@ -69,7 +87,7 @@ export interface UseTradersPagination {
  * @param options - React Query 옵션
  */
 export const useTraders = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   pagination: UseTradersPagination = {},
   options?: Omit<
     UseQueryOptions<TradersResponse>,

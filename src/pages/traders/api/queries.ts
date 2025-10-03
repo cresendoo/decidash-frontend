@@ -20,6 +20,24 @@ import {
 } from '@tanstack/react-query'
 
 // ============================================
+// Custom Config for Development (CORS Proxy)
+// ============================================
+
+// 개발 환경에서 CORS 문제를 우회하기 위한 커스텀 설정
+const isDevelopment = import.meta.env.DEV
+
+export const CUSTOM_DEVNET_CONFIG: DeciDashConfig =
+  isDevelopment
+    ? {
+        ...DeciDashConfig.DEVNET,
+        tradingVM: {
+          ...DeciDashConfig.DEVNET.tradingVM,
+          APIURL: '', // 프록시 사용: /api 경로가 자동으로 백엔드로 프록시됨
+        },
+      }
+    : DeciDashConfig.DEVNET
+
+// ============================================
 // Utility Types
 // ============================================
 
@@ -82,14 +100,14 @@ export function createDeciDashConfig(
   overrides: Partial<DeciDashConfig> = {},
 ): DeciDashConfig {
   return {
-    ...DeciDashConfig.DEVNET,
+    ...CUSTOM_DEVNET_CONFIG,
     ...overrides,
     tradingVM: {
-      ...DeciDashConfig.DEVNET.tradingVM,
+      ...CUSTOM_DEVNET_CONFIG.tradingVM,
       ...overrides.tradingVM,
     },
     node: {
-      ...DeciDashConfig.DEVNET.node,
+      ...CUSTOM_DEVNET_CONFIG.node,
       ...overrides.node,
     },
     fetchFn: overrides.fetchFn ?? fetch,
@@ -115,7 +133,7 @@ export async function getMarketIdBySymbol(
   ) {
     try {
       const markets = await getMarkets({
-        decidashConfig: DeciDashConfig.DEVNET,
+        decidashConfig: CUSTOM_DEVNET_CONFIG,
       })
 
       marketCache = new Map()
@@ -159,7 +177,7 @@ export async function getMarketIdBySymbol(
  * 마켓 목록 조회
  */
 export const useMarkets = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
 ) => {
   return useQuery({
     queryKey: ['markets', config.tradingVM.APIURL],
@@ -185,7 +203,7 @@ export interface MarketWithPrice extends Market {
 }
 
 export const useMarketsWithPrices = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
 ) => {
   return useQuery({
     queryKey: [
@@ -242,7 +260,7 @@ export const useMarketsWithPrices = (
  * 마켓 이름 목록 조회 (심플 버전)
  */
 export const useMarketNames = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
 ) => {
   return useQuery({
     queryKey: ['marketNames', config.tradingVM.APIURL],
@@ -261,7 +279,7 @@ export const useMarketNames = (
  */
 export const useMarketPrice = (
   marketSymbol: string,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<number>,
     'queryKey' | 'queryFn'
@@ -294,7 +312,7 @@ export const useMarketPrice = (
  */
 export const useMarketPriceDetail = (
   marketSymbol: string,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<MarketPrice[]>,
     'queryKey' | 'queryFn'
@@ -329,7 +347,7 @@ export const useMarketCandlesticks = (
   interval: MarketCandlesticksInterval,
   startTime: number,
   endTime: number,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<MarketCandlesticks[]>,
     'queryKey' | 'queryFn'
@@ -392,7 +410,7 @@ export interface MarketDepthResponse {
 export const getMarketDepth = async (
   marketId: string,
   limit: number = 100,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
 ): Promise<MarketDepthResponse> => {
   const { fetchFn, tradingVM } = config
   const url = `${tradingVM.APIURL}/api/v1/depths?market=${marketId}&limit=${limit}`
@@ -412,7 +430,7 @@ export const getMarketDepth = async (
  */
 export const useUserPositions = (
   userAddress: string | null,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<UserPosition[]>,
     'queryKey' | 'queryFn'
@@ -445,7 +463,7 @@ export const useUserPositions = (
 export const getUserTradeHistory = async (
   userAddress: string,
   limit: number = 50,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
 ): Promise<MarketTradeHistory[]> => {
   const { fetchFn, tradingVM } = config
   const url = `${tradingVM.APIURL}/api/v1/trade_history?user=${userAddress}&limit=${limit}`
@@ -463,7 +481,7 @@ export const getUserTradeHistory = async (
 export const useUserTradeHistory = (
   userAddress: string | null,
   limit: number = 50,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<MarketTradeHistory[]>,
     'queryKey' | 'queryFn'
