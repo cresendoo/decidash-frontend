@@ -25,11 +25,30 @@ import {
 export type { DeciDashConfig } from '@coldbell/decidash-ts-sdk'
 
 // ============================================
+// Custom Config for Development (CORS Proxy)
+// ============================================
+
+// 개발 환경에서 CORS 문제를 우회하기 위한 커스텀 설정
+// Vite 프록시를 통해 API를 호출합니다
+const isDevelopment = import.meta.env.DEV
+
+export const CUSTOM_DEVNET_CONFIG: DeciDashConfig =
+  isDevelopment
+    ? {
+        ...DeciDashConfig.DEVNET,
+        tradingVM: {
+          ...DeciDashConfig.DEVNET.tradingVM,
+          APIURL: '', // 프록시 사용: /api 경로가 자동으로 백엔드로 프록시됨
+        },
+      }
+    : DeciDashConfig.DEVNET
+
+// ============================================
 // Markets Query
 // ============================================
 
 export const useMarkets = (
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<Market[]>,
     'queryKey' | 'queryFn'
@@ -65,7 +84,7 @@ export const useMarkets = (
 
 export const useAccountOverviews = (
   address: string | null,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<AccountOverviews | null>,
     'queryKey' | 'queryFn'
@@ -119,7 +138,7 @@ export const usePortfolioChart = (
   address: string | null,
   range: PortfolioChartRange = '1d',
   dataType: PortfolioChartDataType = 'pnl',
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<PortfolioChartPoint[] | null>,
     'queryKey' | 'queryFn'
@@ -176,7 +195,7 @@ export const usePortfolioChart = (
 
 export const useAccountPositions = (
   address: string | null,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<UserPosition[] | null>,
     'queryKey' | 'queryFn'
@@ -230,7 +249,7 @@ export const useAccountPositions = (
 
 export const useUserOpenOrders = (
   address: string | null,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<OpenOrder[] | null>,
     'queryKey' | 'queryFn'
@@ -281,7 +300,7 @@ export const useUserOpenOrders = (
 export const useUserTradeHistory = (
   address: string | null,
   limit: number = 50,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<MarketTradeHistory[] | null>,
     'queryKey' | 'queryFn'
@@ -334,7 +353,7 @@ export const useUserTradeHistory = (
 export const useFundingRateHistory = (
   address: string | null,
   limit: number = 50,
-  config: DeciDashConfig = DeciDashConfig.DEVNET,
+  config: DeciDashConfig = CUSTOM_DEVNET_CONFIG,
   options?: Omit<
     UseQueryOptions<FundingRateHistoryEntry[] | null>,
     'queryKey' | 'queryFn'
