@@ -39,12 +39,12 @@ export {
 // Account Management
 export {
   type ConfigureUserSettingsArgs,
+  type MarketUserSettings,
   useConfigureUserSettings,
   useCreateSubAccount,
   useDelegateTrading,
   useDepositToSubAccount,
   useDepositToSubAccountAt,
-  type MarketUserSettings,
   useMarketUserSettings,
   useMintUSDC,
   useSetPrimarySubAccount,
@@ -53,13 +53,12 @@ export {
 
 // Trading
 export {
+  type PlaceOrderArgs,
   useDelegateAccountOverview,
-  useDelegateAccountPositions,
   useDelegateFundingHistory,
   useDelegateOpenOrders,
   useDelegatePortfolioChart,
   useDelegateTradeHistory,
   useGetSubAccountBalance,
-  type PlaceOrderArgs,
   usePlaceOrder,
 } from './trading'
