@@ -8,10 +8,17 @@ export {
   DataTableHeaderCell,
   DataTableRow,
 } from './data-table'
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from './dialog'
 export { Drawer } from './drawer'
 export { Dropdown } from './dropdown'
 export { Input } from './input'
 export { MobileHeader } from './mobile-header'
-export { Table, TableCell, TableRow } from './table'
 export type { TableColumn, TableProps } from './table'
+export { Table, TableCell, TableRow } from './table'
 export { Tabs } from './tabs'
+export { Tooltip } from './tooltip'

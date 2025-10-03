@@ -1,4 +1,5 @@
 import { cn } from '../utils/cn'
+import { Tooltip } from './tooltip'
 
 export interface TableColumn {
   key: string
@@ -6,7 +7,7 @@ export interface TableColumn {
   align?: 'left' | 'center' | 'right'
   className?: string
   width?: string // 예: "100px", "150px"
-  underline?: boolean
+  tooltip?: string // 툴팁 내용
 }
 
 export interface TableProps<T> {
@@ -62,14 +63,19 @@ export function Table<T>({
                   : undefined
               }
             >
-              <span
-                className={cn(
-                  column.underline &&
-                    'underline decoration-dotted',
-                )}
-              >
-                {column.label}
-              </span>
+              {column.tooltip ? (
+                <Tooltip content={column.tooltip}>
+                  <span
+                    className={cn(
+                      'underline decoration-dashed underline-offset-2',
+                    )}
+                  >
+                    {column.label}
+                  </span>
+                </Tooltip>
+              ) : (
+                <span>{column.label}</span>
+              )}
             </div>
           ))}
         </div>
