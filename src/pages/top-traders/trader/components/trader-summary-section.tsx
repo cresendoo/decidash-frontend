@@ -193,7 +193,6 @@ export default function TraderSummarySection({
   const isRefetching = isFetching && !isLoading
 
   // Debug: 전체 데이터 구조 확인
-  console.log('[TraderSummarySection] Full data:', data)
 
   // Extract data from AccountOverviews (SDK 타입 사용)
   const perpEquity = data.perp_equity_balance ?? 0

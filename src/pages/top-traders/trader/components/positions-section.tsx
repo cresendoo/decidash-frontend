@@ -1,70 +1,134 @@
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  Tabs,
-} from '@/shared/components'
+import { useState } from 'react'
 
-export default function PositionsSection() {
-  return (
-    <Card>
-      <CardContent className="flex w-full flex-col gap-4">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1">
-              <CardTitle>Positions</CardTitle>
-              <p className="text-xs text-white/60">
-                17 (15win)
-              </p>
-            </div>
-            <div className="hidden items-center gap-2 md:flex">
-              <Stat label="Total" value="$155.6M" />
-              <Stat label="Long" value="$155.6M (100%)" />
-              <Stat label="Short" value="$0.0 (0%)" />
-              <Stat label="Δ" value="+$142.3M" />
-              <Stat label="Long PnL" value="+$15.4M" />
-              <Stat label="Short PnL" value="$0.0" />
-              <Stat
-                label="UPnL"
-                value="+$15.4M (88% win)"
-              />
-            </div>
-          </div>
-        </div>
+import { Card } from '@/shared/components'
 
-        <Tabs
-          tabs={[
-            { id: 'asset', label: 'Asset Positions' },
-            { id: 'orders', label: 'Open Orders' },
-            { id: 'fills', label: 'Recent Fills' },
-            { id: 'completed', label: 'Completed Trades' },
-          ]}
-          activeTab={'asset'}
-          onChange={() => {}}
-          className="-mx-2"
-        />
+import AssetPositionsTable from './asset-positions-table'
+import CompletedTradesTable from './completed-trades-table'
+import OpenOrdersTable from './open-orders-table'
+import RecentFillsTable from './recent-fills-table'
 
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-[1000px] rounded-2xl border border-white/5 p-4 text-white/60">
-            테이블이 여기에 들어갑니다.
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+type TabType = 'asset' | 'orders' | 'fills' | 'completed'
+
+interface PositionsSectionProps {
+  address: string
 }
 
-function Stat({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
+export default function PositionsSection({
+  address,
+}: PositionsSectionProps) {
+  const [activeTab, setActiveTab] =
+    useState<TabType>('asset')
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'asset':
+        return <AssetPositionsTable address={address} />
+      case 'orders':
+        return <OpenOrdersTable address={address} />
+      case 'fills':
+        return <RecentFillsTable address={address} />
+      case 'completed':
+        return <CompletedTradesTable address={address} />
+      default:
+        return null
+    }
+  }
+
   return (
-    <div className="flex items-center gap-1 text-white/60">
-      <p className="text-xs">{label}</p>
-      <p className="text-xs">{value}</p>
-    </div>
+    <Card className="flex flex-col overflow-clip border border-stone-800">
+      {/* Info List - Header with Stats */}
+      <div className="flex items-center gap-6 border-b border-stone-800 px-6 py-3">
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Positions</p>
+          <p className="text-white">17</p>
+          <p className="text-white/40">(15win)</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Total</p>
+          <p className="text-white">$155.6M</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Long</p>
+          <p className="text-white">$155.6M</p>
+          <p className="text-white/40">(100%)</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Short</p>
+          <p className="text-white">$0.0</p>
+          <p className="text-white/40">(0%)</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Δ</p>
+          <p className="text-[#00c951]">+$142.3M</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Long PnL</p>
+          <p className="text-[#00c951]">+$15.4M</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">Short PnL</p>
+          <p className="text-[#00c951]">$0.0</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <p className="text-white/60">UPnL</p>
+          <p className="text-[#00c951]">+$15.4M</p>
+          <p className="text-white/40">(88% win)</p>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex flex-col gap-5 p-6">
+        {/* Button Group - Tab Navigation */}
+        <div className="flex items-center gap-2.5">
+          <div className="overflow-clip rounded-xl border border-stone-800 p-1">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('asset')}
+                className={`flex h-8 items-center justify-center gap-1 rounded-lg px-3 text-xs font-medium ${
+                  activeTab === 'asset'
+                    ? 'bg-[#ede030] text-stone-950'
+                    : 'text-white'
+                }`}
+              >
+                Asset Positions
+              </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`flex h-8 items-center justify-center gap-1 rounded-lg px-3 text-xs font-medium ${
+                  activeTab === 'orders'
+                    ? 'bg-[#ede030] text-stone-950'
+                    : 'text-white'
+                }`}
+              >
+                Open Orders
+              </button>
+              <button
+                onClick={() => setActiveTab('fills')}
+                className={`flex h-8 items-center justify-center gap-1 rounded-lg px-3 text-xs font-medium ${
+                  activeTab === 'fills'
+                    ? 'bg-[#ede030] text-stone-950'
+                    : 'text-white'
+                }`}
+              >
+                Recent Fills
+              </button>
+              <button
+                onClick={() => setActiveTab('completed')}
+                className={`flex h-8 items-center justify-center gap-1 rounded-lg px-3 text-xs font-medium ${
+                  activeTab === 'completed'
+                    ? 'bg-[#ede030] text-stone-950'
+                    : 'text-white'
+                }`}
+              >
+                Completed Trades
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="w-full">{renderTabContent()}</div>
+      </div>
+    </Card>
   )
 }

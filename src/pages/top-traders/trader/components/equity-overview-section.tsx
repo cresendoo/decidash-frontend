@@ -38,7 +38,7 @@ const formatPercentage = (value?: number): string => {
 
 function EquityOverviewSkeleton() {
   return (
-    <Card className="w-full">
+    <Card className="w-full flex-none">
       <CardContent
         layout="custom"
         className="flex w-full items-start gap-10 overflow-clip p-6"
@@ -77,7 +77,7 @@ function EquityOverviewError({
   errorMessage?: string
 }) {
   return (
-    <Card className="w-full">
+    <Card className="w-full flex-none">
       <CardContent
         layout="custom"
         className="flex w-full items-start gap-10 overflow-clip p-6"
@@ -229,7 +229,7 @@ export default function EquityOverviewSection({
       : undefined
 
   return (
-    <Card className="w-full">
+    <Card className="w-full flex-none">
       <CardContent
         layout="custom"
         className="flex w-full items-start gap-10 overflow-clip p-6"
@@ -373,7 +373,7 @@ export default function EquityOverviewSection({
         </div>
 
         {/* Right Panel - Chart */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
+        <div className="flex min-h-[400px] min-w-0 flex-1 flex-col gap-5">
           {/* Header: Range Tabs + PnL Value */}
           <div className="flex w-full shrink-0 items-center justify-between gap-6">
             {/* Range Tabs */}
@@ -415,7 +415,7 @@ export default function EquityOverviewSection({
           </div>
 
           {/* Chart */}
-          <div className="flex min-h-0 min-w-0 flex-1">
+          <div className="flex h-[320px] min-w-0 flex-1">
             <PortfolioChart
               address={address}
               range={chartRange}
