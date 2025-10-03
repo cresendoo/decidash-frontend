@@ -36,12 +36,30 @@ interface WalletState {
   // ============================================
 
   /**
+   * Main Account Seed (Account 1)
+   *
+   * **메모리에만 저장** (localStorage X, 보안상 이유)
+   * User Wallet 서명으로 생성된 Main Account의 seed
+   * 이 시드로부터 Main Account를 언제든 재생성 가능
+   * 페이지 새로고침 시 다시 서명 필요
+   */
+  mainAccountSeed: `0x${string}` | null
+
+  /**
    * Delegate Account Seed (Account 2)
    *
    * localStorage에 persist되는 시드값
    * 이 시드로부터 Delegate Account를 언제든 재생성 가능
    */
   delegateAccountSeed: `0x${string}` | null
+
+  /**
+   * Primary Sub Account Address
+   *
+   * localStorage에 persist되는 주소값
+   * Main Account (Account 1)로부터 조회한 Sub Account 주소
+   */
+  primarySubAccountAddress: string | null
 
   // ============================================
   // 로딩 및 에러 상태
@@ -62,6 +80,26 @@ interface WalletState {
   // ============================================
 
   /**
+   * Main Account 생성 및 저장
+   *
+   * User Wallet 서명을 통해 Main Account를 생성하고 seed를 localStorage에 저장합니다.
+   * 이미 생성된 경우 저장된 seed로 재생성합니다.
+   *
+   * @param signMessage - 지갑 서명 함수 (처음 생성 시에만 필요)
+   *
+   * @example
+   * ```ts
+   * const mainAccount = await createMainAccount(signMessage)
+   * ```
+   */
+  createMainAccount: (
+    signMessage?: (args: {
+      message: string
+      nonce: string
+    }) => Promise<{ signature: string }>,
+  ) => Promise<Account>
+
+  /**
    * Delegate Account 생성 및 저장
    *
    * Main Account로부터 Delegate Account를 생성하고 시드를 localStorage에 저장합니다.
@@ -75,6 +113,23 @@ interface WalletState {
    * ```
    */
   createDelegateAccount: (
+    mainAccount: Account,
+  ) => Promise<void>
+
+  /**
+   * Primary Sub Account 주소 저장
+   *
+   * Main Account로부터 조회한 Primary Sub Account 주소를 localStorage에 저장합니다.
+   *
+   * @param mainAccount - Main Account (Account 1)
+   *
+   * @example
+   * ```ts
+   * const mainAccount = await genEd25519AccountWithHex(signature)
+   * await savePrimarySubAccountAddress(mainAccount)
+   * ```
+   */
+  savePrimarySubAccountAddress: (
     mainAccount: Account,
   ) => Promise<void>
 
@@ -125,12 +180,110 @@ export const useWalletStore = create<WalletState>()(
       // 초기 상태
       // ============================================
 
+      mainAccountSeed: null,
       delegateAccountSeed: null,
+      primarySubAccountAddress: null,
       initializingAccounts: false,
       error: null,
 
       // ============================================
-      // Delegate Account 생성
+      // Main Account 생성 (Account 1)
+      // ============================================
+
+      async createMainAccount(signMessage) {
+        try {
+          const { mainAccountSeed } = get()
+
+          // 이미 생성된 Main Account가 있으면 재사용
+          if (mainAccountSeed) {
+            console.log(
+              '[WalletStore] Reusing existing Main Account seed',
+            )
+            const mainAccount =
+              await genEd25519AccountWithHex(
+                mainAccountSeed,
+              )
+            console.log(
+              '[WalletStore] Main Account reloaded:',
+              mainAccount.accountAddress.toString(),
+            )
+            return mainAccount
+          }
+
+          // 처음 생성 시 서명 필요
+          if (!signMessage) {
+            throw new Error(
+              'signMessage is required for first-time Main Account creation',
+            )
+          }
+
+          console.log(
+            '[WalletStore] ========== CREATE MAIN ACCOUNT START ==========',
+          )
+          console.log(
+            '[WalletStore] Creating Main Account with signature...',
+          )
+
+          set({
+            initializingAccounts: true,
+            error: null,
+          })
+
+          // 고정된 메시지로 서명 (deterministic)
+          const message =
+            'Sign to create your Decidash account'
+          const nonce = 'decidash-main-account'
+
+          const { signature } = await signMessage({
+            message,
+            nonce,
+          })
+          console.log(
+            '[WalletStore] Signature obtained (first 20 chars):',
+            signature.substring(0, 20) + '...',
+          )
+
+          // Main Account 생성
+          const mainAccount =
+            await genEd25519AccountWithHex(
+              signature as `0x${string}`,
+            )
+          console.log(
+            '[WalletStore] Main Account created:',
+            mainAccount.accountAddress.toString(),
+          )
+
+          // Seed 저장
+          set({
+            mainAccountSeed: signature as `0x${string}`,
+            initializingAccounts: false,
+          })
+
+          console.log(
+            '[WalletStore] Main Account seed saved to localStorage',
+          )
+          console.log(
+            '[WalletStore] ========== CREATE MAIN ACCOUNT SUCCESS ==========',
+          )
+
+          return mainAccount
+        } catch (e: unknown) {
+          console.error(
+            '[WalletStore] ========== CREATE MAIN ACCOUNT ERROR ==========',
+          )
+          console.error('[WalletStore] Error:', e)
+          const errorMessage =
+            e instanceof Error ? e.message : String(e)
+          set({
+            error: errorMessage,
+            initializingAccounts: false,
+          })
+          throw e
+        }
+      },
+
+      // ============================================
+      // Delegate Account 생성 (Account 2)
       // ============================================
 
       async createDelegateAccount() {
@@ -213,6 +366,52 @@ export const useWalletStore = create<WalletState>()(
             error: errorMessage,
             initializingAccounts: false,
           })
+          throw e
+        }
+      },
+
+      // ============================================
+      // Primary Sub Account 저장
+      // ============================================
+
+      async savePrimarySubAccountAddress(mainAccount) {
+        try {
+          console.log(
+            '[WalletStore] Saving Primary Sub Account address...',
+          )
+
+          const { aptosConfig } = useNetwork.getState()
+          const aptos = new Aptos(aptosConfig)
+
+          const { getPrimarySubAccount } = await import(
+            '@coldbell/decidash-ts-sdk'
+          )
+
+          const subAccountAddress =
+            await getPrimarySubAccount({
+              aptos,
+              primaryAddress:
+                mainAccount.accountAddress.toString(),
+            })
+
+          console.log(
+            '[WalletStore] Primary Sub Account:',
+            subAccountAddress,
+          )
+
+          // localStorage에 저장
+          set({
+            primarySubAccountAddress: subAccountAddress,
+          })
+
+          console.log(
+            '[WalletStore] Primary Sub Account saved to localStorage',
+          )
+        } catch (e: unknown) {
+          console.error(
+            '[WalletStore] Failed to save primary sub account:',
+            e,
+          )
           throw e
         }
       },
@@ -416,7 +615,9 @@ export const useWalletStore = create<WalletState>()(
 
       reset() {
         set({
+          mainAccountSeed: null,
           delegateAccountSeed: null,
+          primarySubAccountAddress: null,
           initializingAccounts: false,
           error: null,
         })
@@ -425,8 +626,11 @@ export const useWalletStore = create<WalletState>()(
     {
       name: 'decidash-wallet-storage', // localStorage key
       partialize: (state) => ({
-        // delegateAccountSeed만 localStorage에 저장
+        // delegateAccountSeed, primarySubAccountAddress만 localStorage에 저장
+        // mainAccountSeed는 메모리에만 (보안상 localStorage 저장 X)
         delegateAccountSeed: state.delegateAccountSeed,
+        primarySubAccountAddress:
+          state.primarySubAccountAddress,
       }),
     },
   ),

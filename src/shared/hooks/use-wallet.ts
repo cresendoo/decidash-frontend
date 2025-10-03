@@ -1,5 +1,5 @@
 import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useWalletStore } from '@/shared/wallet/wallet-store'
 
@@ -54,7 +54,7 @@ import { useWalletStore } from '@/shared/wallet/wallet-store'
  */
 export function useWallet() {
   const {
-    account,
+    account: userWalletAccount,
     connected,
     connect,
     disconnect,
@@ -65,98 +65,125 @@ export function useWallet() {
   } = useAptosWallet()
 
   const {
+    mainAccountSeed,
     delegateAccountSeed,
+    primarySubAccountAddress:
+      storedPrimarySubAccountAddress,
     initializingAccounts,
+    createMainAccount: createMainAccountStore,
     createDelegateAccount: createDelegateAccountStore,
     registerDelegation: registerDelegationStore,
+    savePrimarySubAccountAddress:
+      savePrimarySubAccountAddressStore,
     getDelegateAccount,
     hasDelegateAccount,
     reset: resetWalletStore,
   } = useWalletStore()
 
   /**
-   * Main Account 생성
-   *
-   * 유저 지갑 서명을 통해 Main Account를 생성합니다.
-   * Main Account는 저장되지 않으며, 필요할 때마다 재생성됩니다.
-   * 항상 고정된 메시지로 서명하여 동일한 계정이 생성됩니다.
+   * Primary Sub Account 주소 상태
+   * localStorage에서 불러온 값을 사용, 없으면 조회
    */
-  const createMainAccount = useCallback(async () => {
-    console.log(
-      '[useWallet] ========== CREATE MAIN ACCOUNT START ==========',
-    )
+  const [
+    primarySubAccountAddress,
+    setPrimarySubAccountAddress,
+  ] = useState<string | null>(
+    storedPrimarySubAccountAddress,
+  )
 
-    if (!aptosSignMessage) {
-      console.error(
-        '[useWallet] aptosSignMessage not available',
-      )
-      throw new Error(
-        'Wallet does not support message signing',
-      )
+  // localStorage 값이 변경되면 상태 업데이트
+  useEffect(() => {
+    setPrimarySubAccountAddress(
+      storedPrimarySubAccountAddress,
+    )
+  }, [storedPrimarySubAccountAddress])
+
+  // Primary Sub Account 주소가 없으면 조회 (한 번만)
+  useEffect(() => {
+    let mounted = true
+
+    const fetchAndSavePrimarySubAccount = async () => {
+      // 이미 저장된 값이 있으면 조회하지 않음
+      if (
+        storedPrimarySubAccountAddress ||
+        !connected ||
+        !hasDelegateAccount()
+      ) {
+        return
+      }
+
+      try {
+        console.log(
+          '[useWallet] Primary Sub Account not found, fetching...',
+        )
+
+        // Main Account 생성 (서명 한 번만 필요)
+        const mainAccount = await createMainAccount()
+
+        // Primary Sub Account 조회 및 저장
+        await savePrimarySubAccountAddressStore(mainAccount)
+
+        console.log('[useWallet] Primary Sub Account saved')
+      } catch (error) {
+        console.error(
+          '[useWallet] Failed to fetch and save primary sub account:',
+          error,
+        )
+      }
     }
 
-    // 고정된 nonce와 메시지 (항상성 보장)
-    const FIXED_NONCE = 'decidash-main-account-v1'
-    const mainMessage = `Welcome to DeciDash!
+    if (mounted) {
+      fetchAndSavePrimarySubAccount()
+    }
 
-By signing this message, you will:
-• Create a deterministic trading account
-• Enable secure fund management
-• Authorize trading operations
+    return () => {
+      mounted = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    connected,
+    mainAccountSeed,
+    delegateAccountSeed,
+    storedPrimarySubAccountAddress,
+  ])
 
-This signature is used to generate your Main Account, which will manage your trading funds and delegate trading authority.
+  /**
+   * Main Account 생성 (Account 1)
+   *
+   * zustand 메모리에 저장된 seed가 있으면 재사용, 없으면 서명 요청
+   * localStorage에는 저장하지 않음 (보안)
+   */
+  const createMainAccount = useCallback(async () => {
+    try {
+      // Aptos signMessage를 wallet-store가 기대하는 형식으로 변환
+      const signMessageWrapper = aptosSignMessage
+        ? async (args: {
+            message: string
+            nonce: string
+          }) => {
+            const result = await aptosSignMessage(args)
+            // Signature 객체를 string으로 변환
+            return {
+              signature:
+                typeof result.signature === 'string'
+                  ? result.signature
+                  : result.signature.toString(),
+            }
+          }
+        : undefined
 
-No fees or transactions will occur from this signature alone.`
-
-    console.log(
-      '[useWallet] Requesting signature from wallet...',
-    )
-    console.log('[useWallet] Message:', mainMessage)
-    console.log('[useWallet] Nonce:', FIXED_NONCE)
-
-    const result = await aptosSignMessage({
-      message: mainMessage,
-      nonce: FIXED_NONCE,
-    })
-
-    console.log('[useWallet] Signature received')
-    console.log('[useWallet] Result:', result)
-
-    // Aptos wallet adapter의 서명 결과를 hex string으로 변환
-    const signatureStr = String(result.signature)
-    console.log(
-      '[useWallet] Signature string:',
-      signatureStr.substring(0, 20) + '...',
-    )
-
-    // 0x 접두사가 없으면 추가
-    const signature = signatureStr.startsWith('0x')
-      ? signatureStr
-      : `0x${signatureStr}`
-    console.log(
-      '[useWallet] Signature with 0x:',
-      signature.substring(0, 20) + '...',
-    )
-
-    // Main Account 생성
-    console.log('[useWallet] Generating Main Account...')
-    const { genEd25519AccountWithHex } = await import(
-      '@/shared/wallet/utils'
-    )
-    const mainAccount = await genEd25519AccountWithHex(
-      signature as `0x${string}`,
-    )
-
-    console.log(
-      '[useWallet] Main Account created:',
-      mainAccount.accountAddress.toString(),
-    )
-    console.log(
-      '[useWallet] ========== CREATE MAIN ACCOUNT SUCCESS ==========',
-    )
-
-    return mainAccount
-  }, [aptosSignMessage])
+      // wallet-store의 createMainAccount 호출 (서명은 필요시에만)
+      return await createMainAccountStore(
+        signMessageWrapper,
+      )
+    } catch (error) {
+      console.error(
+        '[useWallet] Failed to create Main Account:',
+        error,
+      )
+      throw error
+    }
+  }, [createMainAccountStore, aptosSignMessage])
 
   /**
    * 지갑 연결 해제 (계정 상태도 함께 초기화)
@@ -176,7 +203,14 @@ No fees or transactions will occur from this signature alone.`
           'Wallet does not support message signing',
         )
       }
-      return aptosSignMessage(args)
+      const result = await aptosSignMessage(args)
+      // Signature 객체를 string으로 변환
+      return {
+        signature:
+          typeof result.signature === 'string'
+            ? result.signature
+            : result.signature.toString(),
+      }
     },
     [aptosSignMessage],
   )
@@ -186,8 +220,8 @@ No fees or transactions will occur from this signature alone.`
     // 지갑 연결 상태
     // ============================================
 
-    // 연결된 지갑 주소 (string | null)
-    account: account?.address?.toString() ?? null,
+    // Primary Sub Account 주소 (헤더 등에서 표시용)
+    account: primarySubAccountAddress,
 
     // 지갑 연결 상태
     connected,
@@ -208,7 +242,7 @@ No fees or transactions will occur from this signature alone.`
     wallet,
 
     // 전체 account 객체 (필요시 사용)
-    accountInfo: account,
+    accountInfo: userWalletAccount,
 
     // ============================================
     // 결정적 계정 상태
