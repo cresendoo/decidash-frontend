@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
 import { Input } from '@/shared/components'
+import { useWallet } from '@/shared/hooks'
+
+import type { PlaceOrderArgs } from '../api/trading'
+import { usePlaceOrder } from '../api/trading'
 import { useTradingStore } from '../store/trading-store'
 import { ClosePositionLimitModal } from './close-position-limit-modal'
 import { ClosePositionMarketModal } from './close-position-market-modal'
@@ -22,6 +26,20 @@ export default function TradeSection() {
     'isolated' | 'cross'
   >('isolated')
   const [leverage, setLeverage] = useState(25)
+
+  // 지갑 및 계정 상태
+  const {
+    connected,
+    connect,
+    wallets,
+    hasDelegateAccount,
+    createDelegateAccount,
+    registerDelegation,
+    initializingAccounts,
+  } = useWallet()
+
+  // 주문 제출
+  const placeOrder = usePlaceOrder()
 
   // 모달 상태
   const {
@@ -46,6 +64,9 @@ export default function TradeSection() {
   >('USDC')
   const [marginPercentage, setMarginPercentage] =
     useState(0)
+  const [isEnabling, setIsEnabling] = useState(false)
+  const [showWalletModal, setShowWalletModal] =
+    useState(false)
 
   const availableBalance = 123.23 // USDC 기준
   const BTC_USD_PRICE = 65000 // 추후 실시간 가격 연동 가능
@@ -99,6 +120,100 @@ export default function TradeSection() {
     } else {
       const marginBtc = toBtc(marginUsdc)
       setInitialMargin(marginBtc.toString())
+    }
+  }
+
+  // 지갑 연결 핸들러
+  const handleConnect = (walletName: string) => {
+    connect(walletName)
+    setShowWalletModal(false)
+  }
+
+  // Enable Trading 핸들러
+  const handleEnableTrading = async () => {
+    try {
+      console.log(
+        '[TradeSection] ========== ENABLE TRADING START ==========',
+      )
+      setIsEnabling(true)
+
+      // 1. Delegate Account 생성
+      console.log(
+        '[TradeSection] Step 1: Creating delegate account...',
+      )
+      await createDelegateAccount()
+      console.log(
+        '[TradeSection] Step 1: Delegate account created successfully',
+      )
+
+      // 2. Delegation 등록
+      console.log(
+        '[TradeSection] Step 2: Registering delegation...',
+      )
+      const txHash = await registerDelegation()
+      console.log(
+        '[TradeSection] Step 2: Delegation registered successfully',
+      )
+      console.log(
+        '[TradeSection] Transaction hash:',
+        txHash,
+      )
+
+      console.log(
+        '[TradeSection] ========== ENABLE TRADING SUCCESS ==========',
+      )
+      alert('Trading enabled successfully!')
+    } catch (error) {
+      console.error(
+        '[TradeSection] ========== ENABLE TRADING ERROR ==========',
+      )
+      console.error(
+        '[TradeSection] Error type:',
+        typeof error,
+      )
+      console.error('[TradeSection] Error object:', error)
+      if (error instanceof Error) {
+        console.error(
+          '[TradeSection] Error message:',
+          error.message,
+        )
+        console.error(
+          '[TradeSection] Error stack:',
+          error.stack,
+        )
+      }
+      alert(
+        `Failed to enable trading: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    } finally {
+      setIsEnabling(false)
+    }
+  }
+
+  // 주문 제출 핸들러
+  const handleSubmitOrder = async () => {
+    try {
+      // TODO: 실제 market address 사용
+      const marketAddress = '0x...'
+
+      const orderArgs: PlaceOrderArgs = {
+        marketAddress,
+        price: 0, // Market order는 price 0
+        size: parseToNumber(initialMargin),
+        isLong: positionType === 'buy',
+        timeInForce: 0,
+        isReduceOnly: false,
+      }
+
+      await placeOrder.mutateAsync(orderArgs)
+
+      alert('Order placed successfully!')
+    } catch (error) {
+      console.error(
+        '[TradeSection] Failed to place order:',
+        error,
+      )
+      alert('Failed to place order. Please try again.')
     }
   }
 
@@ -356,20 +471,101 @@ export default function TradeSection() {
       </div>
 
       {/* Submit Button */}
-      <button
-        className={`flex h-12 w-full shrink-0 items-center justify-center gap-1 rounded-xl px-4 py-0 transition-colors ${
-          positionType === 'buy'
-            ? 'bg-[#ede030] text-stone-950 hover:bg-[#ede030]/90'
-            : 'bg-[#fb2c36] text-white hover:bg-[#fb2c36]/90'
-        }`}
-        data-node-id="1641:1925"
-      >
-        <p className="text-base font-medium leading-6">
-          {positionType === 'buy'
-            ? 'Buy / Long'
-            : 'Sell / Short'}
-        </p>
-      </button>
+      {!connected ? (
+        // 지갑 미연결 → 지갑 선택 dropdown
+        <div className="relative">
+          <button
+            onClick={() =>
+              setShowWalletModal(!showWalletModal)
+            }
+            className="flex h-12 w-full shrink-0 items-center justify-center gap-1 rounded-xl bg-[#ede030] px-4 py-0 text-stone-950 transition-colors hover:bg-[#ede030]/90"
+            data-node-id="1641:1925"
+          >
+            <p className="text-base font-medium leading-6">
+              Connect Wallet
+            </p>
+          </button>
+
+          {/* 지갑 선택 모달 */}
+          {showWalletModal && (
+            <>
+              {/* 배경 오버레이 */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowWalletModal(false)}
+              />
+              {/* 모달 */}
+              <div className="absolute bottom-full left-0 right-0 z-50 mb-2 rounded-lg border border-stone-800 bg-stone-950 p-4 shadow-xl">
+                <h3 className="mb-3 text-sm font-semibold text-white">
+                  Connect a Wallet
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {wallets.map((wallet) => (
+                    <button
+                      key={wallet.name}
+                      onClick={() =>
+                        handleConnect(wallet.name)
+                      }
+                      className="flex items-center gap-3 rounded-lg border border-stone-800 bg-stone-900/50 px-4 py-3 text-left transition-colors hover:bg-stone-800"
+                    >
+                      {wallet.icon && (
+                        <img
+                          src={wallet.icon}
+                          alt={wallet.name}
+                          className="h-6 w-6 rounded"
+                        />
+                      )}
+                      <span className="text-sm text-white">
+                        {wallet.name}
+                      </span>
+                    </button>
+                  ))}
+                  {wallets.length === 0 && (
+                    <p className="text-xs text-white/60">
+                      No wallets detected. Please install a
+                      wallet extension.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ) : !hasDelegateAccount ? (
+        // 지갑 연결됨 + Account2 없음 → Enable Trading
+        <button
+          onClick={handleEnableTrading}
+          disabled={isEnabling || initializingAccounts}
+          className="flex h-12 w-full shrink-0 items-center justify-center gap-1 rounded-xl bg-[#ede030] px-4 py-0 text-stone-950 transition-colors hover:bg-[#ede030]/90 disabled:opacity-50"
+          data-node-id="1641:1925"
+        >
+          <p className="text-base font-medium leading-6">
+            {isEnabling || initializingAccounts
+              ? 'Enabling...'
+              : 'Enable Trading'}
+          </p>
+        </button>
+      ) : (
+        // 모든 준비 완료 → 실제 주문
+        <button
+          onClick={handleSubmitOrder}
+          disabled={placeOrder.isPending}
+          className={`flex h-12 w-full shrink-0 items-center justify-center gap-1 rounded-xl px-4 py-0 transition-colors disabled:opacity-50 ${
+            positionType === 'buy'
+              ? 'bg-[#ede030] text-stone-950 hover:bg-[#ede030]/90'
+              : 'bg-[#fb2c36] text-white hover:bg-[#fb2c36]/90'
+          }`}
+          data-node-id="1641:1925"
+        >
+          <p className="text-base font-medium leading-6">
+            {placeOrder.isPending
+              ? 'Placing Order...'
+              : positionType === 'buy'
+                ? 'Buy / Long'
+                : 'Sell / Short'}
+          </p>
+        </button>
+      )}
 
       {/* Modals */}
       <MarginModeModal

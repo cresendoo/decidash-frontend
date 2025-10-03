@@ -27,13 +27,11 @@ export default function MarketListPanel({
   const { data: markets = [], isLoading } =
     useMarketsWithPrices()
 
-  console.log(markets)
-
   const sortedMarkets = useMemo(() => {
     const prioritySymbols = [
       'BTC',
-      'SOL',
       'ETH',
+      'SOL',
       'APT',
       'APTOS',
     ]
