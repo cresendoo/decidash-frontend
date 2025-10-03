@@ -15,8 +15,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0(@aptos-labs/ts-sdk@5.1.0(got@11.8.6))(@telegram-apps/bridge@1.9.2)(@types/react@19.2.0)(@wallet-standard/core@1.1.1)(aptos@1.21.0)(react@19.2.0)
       '@coldbell/decidash-ts-sdk':
-        specifier: ^1.14.0
-        version: 1.14.0(axios@1.12.2)(got@11.8.6)
+        specifier: ^1.15.0
+        version: 1.15.0(axios@1.12.2)(got@11.8.6)
       '@tanstack/react-query':
         specifier: ^5.87.1
         version: 5.90.2(react@19.2.0)
@@ -308,8 +308,8 @@ packages:
     resolution: {integrity: sha512-bkFqkLhh3pMBUQQkpVgWDWq/lqzc2678eUyDlTBhRqhCHFguYYGM0Efga7tYk4TogG/3x0EEl66/OQ+WGbWB/Q==}
     engines: {node: '>=6.9.0'}
 
-  '@coldbell/decidash-ts-sdk@1.14.0':
-    resolution: {integrity: sha512-YQKr8cduRxVU7HeY7cChVyPvHwnbdp54k2CleVQ2bnitL6IMpz6ApA9CKVSwlqg5ciSfD+jGMIixuz94KdWODQ==}
+  '@coldbell/decidash-ts-sdk@1.15.0':
+    resolution: {integrity: sha512-ZdO77xh1xcuyxwsuuJ+EAU311bODfrrL01/VbUFx/uGhizWkuftImQ820m08567JsAiShaoY42atavqeX+NXAA==}
 
   '@commitlint/cli@19.8.1':
     resolution: {integrity: sha512-LXUdNIkspyxrlV6VDHWBmCZRtkEVRpBKxi2Gtw3J54cGWhLCTouVD/Q6ZSaSvd2YaDObWK8mDjrz3TIKtaQMAA==}
@@ -3377,7 +3377,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@coldbell/decidash-ts-sdk@1.14.0(axios@1.12.2)(got@11.8.6)':
+  '@coldbell/decidash-ts-sdk@1.15.0(axios@1.12.2)(got@11.8.6)':
     dependencies:
       '@aptos-labs/ts-sdk': 1.39.0(axios@1.12.2)(got@11.8.6)
       ts-arithmetic: 0.1.1
