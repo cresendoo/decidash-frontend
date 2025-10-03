@@ -3,8 +3,8 @@ import {
   type AccountOverviews,
   type FundingRateHistoryEntry,
   getAccountOverviews,
-  getAccountPositions,
   getPortfolioChart,
+  getSubAccountBalance,
   getUserFundingRateHistory,
   getUserOpenOrders,
   getUserTradeHistory,
@@ -16,7 +16,6 @@ import {
   type PortfolioChartRange,
   postFeePayer,
   type TimeInForce,
-  type UserPosition,
 } from '@coldbell/decidash-ts-sdk'
 import {
   useMutation,
@@ -72,6 +71,45 @@ async function getDelegateAccount() {
   }
 
   return account
+}
+
+// ============================================
+// 잔액 조회
+// ============================================
+
+/**
+ * Delegate Account 잔액 조회
+ */
+export const useGetSubAccountBalance = (
+  options?: Omit<
+    UseQueryOptions<number, Error>,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  const { getDelegateAccount, hasDelegateAccount } =
+    useWalletStore()
+  const { aptosConfig } = useNetwork()
+
+  return useQuery({
+    queryKey: ['subAccountBalance'],
+    queryFn: async () => {
+      const delegateAccount = await getDelegateAccount()
+
+      if (!delegateAccount) {
+        throw new Error('Delegate account not found')
+      }
+
+      const aptos = new Aptos(aptosConfig)
+
+      return getSubAccountBalance({
+        aptos,
+        subAccountAddress:
+          delegateAccount.accountAddress.toString(),
+      })
+    },
+    enabled: hasDelegateAccount(),
+    ...options,
+  })
 }
 
 // ============================================
@@ -186,53 +224,6 @@ export const usePlaceOrder = (
 
       return { txHash: tx.hash }
     },
-    ...options,
-  })
-}
-
-// ============================================
-// 포지션 조회
-// ============================================
-
-/**
- * Delegate Account의 포지션 조회
- *
- * @example
- * ```tsx
- * const { data: positions, isLoading } = useAccountPositions()
- * ```
- */
-export const useDelegateAccountPositions = (
-  options?: Omit<
-    UseQueryOptions<UserPosition[] | null>,
-    'queryKey' | 'queryFn'
-  >,
-) => {
-  return useQuery({
-    queryKey: ['delegateAccountPositions'],
-    queryFn: async () => {
-      const delegateAccount = await getDelegateAccount()
-      const address =
-        delegateAccount.accountAddress.toString()
-
-      console.log(
-        '[Trading] Fetching positions for:',
-        address,
-      )
-
-      const positions = await getAccountPositions({
-        decidashConfig: CUSTOM_DEVNET_CONFIG,
-        user: address,
-        includeDeleted: false,
-        limit: 100,
-      })
-
-      console.log('[Trading] Positions:', positions)
-
-      return positions
-    },
-    staleTime: 30_000, // 30초
-    refetchInterval: 30_000,
     ...options,
   })
 }

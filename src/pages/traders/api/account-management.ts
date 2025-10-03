@@ -4,10 +4,12 @@ import type {
 } from '@aptos-labs/ts-sdk'
 import { Aptos } from '@aptos-labs/ts-sdk'
 import {
+  configureUserSettingsForMarketPayload,
   createSubAccountPayload,
   delegateTradingToSubaccountPayload,
   depositToSubAccountAtPayload,
   depositToSubAccountPayload,
+  getAccountPositions,
   mintUSDCPayload,
   postFeePayer,
   primarySubAccountPayload,
@@ -16,9 +18,15 @@ import {
 import {
   useMutation,
   type UseMutationOptions,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
 } from '@tanstack/react-query'
 
 import { useNetwork } from '@/shared/network/network-store'
+import { useWalletStore } from '@/shared/wallet/wallet-store'
+
+import { CUSTOM_DEVNET_CONFIG } from './queries'
 
 /**
  * Account Management API
@@ -477,6 +485,278 @@ export const useMintUSDC = (
       )
 
       return { txHash: result.txHash }
+    },
+    ...options,
+  })
+}
+
+// ============================================
+// 사용자 설정 (레버리지, 마진 모드)
+// ============================================
+
+export interface ConfigureUserSettingsArgs {
+  marketAddress: string
+  isCross: boolean
+  userLeverage: number
+}
+
+export interface MarketUserSettings {
+  userLeverage: number
+  isIsolated: boolean
+}
+
+/**
+ * 특정 마켓의 사용자 설정 조회
+ *
+ * includeDeleted: true로 설정하면 포지션이 없어도 설정값을 가져올 수 있습니다.
+ *
+ * @example
+ * ```tsx
+ * const { data: settings } = useMarketUserSettings(marketAddress)
+ * ```
+ */
+export const useMarketUserSettings = (
+  marketAddress?: string,
+  options?: Omit<
+    UseQueryOptions<MarketUserSettings | null>,
+    'queryKey' | 'queryFn'
+  >,
+) => {
+  const { getDelegateAccount, hasDelegateAccount } =
+    useWalletStore()
+
+  return useQuery({
+    queryKey: ['marketUserSettings', marketAddress],
+    queryFn: async () => {
+      if (!marketAddress) return null
+
+      const delegateAccount = await getDelegateAccount()
+      if (!delegateAccount) return null
+
+      const { primarySubAccountAddress } = await import(
+        '@/shared/wallet/wallet-store'
+      ).then((m) => m.useWalletStore.getState())
+      if (!primarySubAccountAddress) return null
+
+      const address =
+        delegateAccount.accountAddress.toString()
+
+      console.log(
+        '[Account Management] Fetching market settings for:',
+        address,
+        marketAddress,
+      )
+
+      const positions = await getAccountPositions({
+        decidashConfig: CUSTOM_DEVNET_CONFIG,
+        user: primarySubAccountAddress,
+        includeDeleted: true, // 포지션이 없어도 설정값 가져오기
+        limit: 1,
+        marketAddress,
+      })
+
+      console.log(
+        '[Account Management] Market settings:',
+        positions,
+      )
+
+      if (positions.length === 0) {
+        // 설정이 없으면 기본값 반환
+        return {
+          userLeverage: 1,
+          isIsolated: true,
+        }
+      }
+
+      return {
+        userLeverage: positions[0].user_leverage,
+        isIsolated: positions[0].is_isolated,
+      }
+    },
+    enabled: !!marketAddress && hasDelegateAccount(),
+    staleTime: 10_000, // 10초
+    ...options,
+  })
+}
+
+/**
+ * 마켓별 사용자 설정 변경
+ *
+ * Margin Mode (Cross/Isolated)와 Leverage를 설정합니다.
+ * Main Account의 서명이 필요할 수 있으며, Delegate Account로 트랜잭션을 제출합니다.
+ *
+ * @example
+ * ```tsx
+ * const configureSettings = useConfigureUserSettings(createMainAccount)
+ *
+ * await configureSettings.mutateAsync({
+ *   marketAddress: '0x...',
+ *   isCross: false, // isolated
+ *   userLeverage: 10,
+ * })
+ * ```
+ */
+export const useConfigureUserSettings = (
+  createMainAccount:
+    | (() => Promise<import('@aptos-labs/ts-sdk').Account>)
+    | null,
+  options?: Omit<
+    UseMutationOptions<
+      { txHash: string; marketAddress: string },
+      Error,
+      ConfigureUserSettingsArgs
+    >,
+    'mutationFn'
+  >,
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (args) => {
+      if (!createMainAccount) {
+        throw new Error('Wallet not connected')
+      }
+
+      console.log(
+        '[Account Management] Configuring user settings:',
+        args,
+      )
+
+      // Delegate Account 로드
+      const { getDelegateAccount, hasDelegateAccount } =
+        useWalletStore.getState()
+
+      if (!hasDelegateAccount()) {
+        throw new Error(
+          'Delegate account not found. Please initialize account first.',
+        )
+      }
+
+      const delegateAccount = await getDelegateAccount()
+      if (!delegateAccount) {
+        throw new Error('Failed to load delegate account')
+      }
+
+      const { aptosConfig, decidashConfig } =
+        useNetwork.getState()
+      const aptos = new Aptos(aptosConfig)
+
+      // localStorage에서 Primary Sub Account 주소 확인
+      const {
+        primarySubAccountAddress,
+        savePrimarySubAccountAddress,
+      } = await import('@/shared/wallet/wallet-store').then(
+        (m) => m.useWalletStore.getState(),
+      )
+
+      let subAccountAddress = primarySubAccountAddress
+
+      // 저장된 주소가 없으면 조회 및 저장 (서명 한 번만 필요)
+      if (!subAccountAddress) {
+        console.log(
+          '[Account Management] Primary Sub Account not found, fetching with signature...',
+        )
+
+        // Main Account 생성 (서명 필요)
+        const mainAccount = await createMainAccount()
+
+        // Primary Sub Account 조회 및 저장
+        await savePrimarySubAccountAddress(mainAccount)
+
+        // 다시 가져오기
+        const state = (
+          await import('@/shared/wallet/wallet-store')
+        ).useWalletStore.getState()
+        subAccountAddress = state.primarySubAccountAddress
+
+        if (!subAccountAddress) {
+          throw new Error(
+            'Failed to get Primary Sub Account address',
+          )
+        }
+
+        console.log(
+          '[Account Management] Primary Sub Account saved:',
+          subAccountAddress,
+        )
+      } else {
+        console.log(
+          '[Account Management] Using cached Primary Sub Account:',
+          subAccountAddress,
+        )
+      }
+
+      // Payload 생성 (Sub Account 주소 사용)
+      const payload = configureUserSettingsForMarketPayload(
+        {
+          subAccountAddress, // Sub Account (Contract의 user)
+          marketAddress: args.marketAddress,
+          isCross: args.isCross,
+          userLeverage: args.userLeverage,
+        },
+      )
+
+      // 트랜잭션 빌드
+      const transaction =
+        await aptos.transaction.build.simple({
+          sender: delegateAccount.accountAddress,
+          data: payload,
+          withFeePayer: true,
+          options: {
+            expireTimestamp: Date.now() + 60_000,
+          },
+        })
+
+      // Delegate Account로 서명
+      const senderAuthenticator = aptos.transaction.sign({
+        signer: delegateAccount,
+        transaction,
+      })
+
+      // Fee-payer 트랜잭션 제출
+      const tx = await postFeePayer({
+        decidashConfig,
+        aptos,
+        signature: Array.from(
+          senderAuthenticator.bcsToBytes(),
+        ),
+        transaction: Array.from(
+          transaction.rawTransaction.bcsToBytes(),
+        ),
+      })
+
+      console.log(
+        '[Account Management] User settings configured:',
+        tx.hash,
+      )
+
+      return {
+        txHash: tx.hash,
+        marketAddress: args.marketAddress,
+      }
+    },
+    onSuccess: async (data) => {
+      // 블록체인 트랜잭션 완료 대기 (2초)
+      await new Promise((resolve) =>
+        setTimeout(resolve, 2000),
+      )
+
+      // 설정 변경 후 해당 마켓의 설정값을 리페치
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'marketUserSettings',
+          data.marketAddress,
+        ],
+        refetchType: 'active',
+      })
+
+      // 즉시 refetch
+      await queryClient.refetchQueries({
+        queryKey: [
+          'marketUserSettings',
+          data.marketAddress,
+        ],
+      })
     },
     ...options,
   })
