@@ -22,7 +22,7 @@ export const mockWalletAdapter: WalletAdapter<MockWallet> = {
       return { fullMessage, publicKey, signature };
     },
   
-  async submitTx(wallet, payload, options) {
+  async submitTx(wallet, payload) {
       const { aptosConfig, decidashConfig } = useNetwork();
       const aptos = new Aptos(aptosConfig);
       const signer = await genEd25519AccountWithHex(wallet.seed);
