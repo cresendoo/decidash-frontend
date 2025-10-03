@@ -1,6 +1,11 @@
 import { useState } from 'react'
 
 import { Input } from '@/shared/components'
+import { useTradingStore } from '../store/trading-store'
+import { ClosePositionLimitModal } from './close-position-limit-modal'
+import { ClosePositionMarketModal } from './close-position-market-modal'
+import { LeverageModal } from './leverage-modal'
+import { MarginModeModal } from './margin-mode-modal'
 
 /**
  * Trade Section 컴포넌트
@@ -16,7 +21,19 @@ export default function TradeSection() {
   const [marginMode, setMarginMode] = useState<
     'isolated' | 'cross'
   >('isolated')
-  const [leverage] = useState(25)
+  const [leverage, setLeverage] = useState(25)
+
+  // 모달 상태
+  const {
+    isMarginModeModalOpen,
+    setIsMarginModeModalOpen,
+    isLeverageModalOpen,
+    setIsLeverageModalOpen,
+    isClosePositionLimitModalOpen,
+    setIsClosePositionLimitModalOpen,
+    isClosePositionMarketModalOpen,
+    setIsClosePositionMarketModalOpen,
+  } = useTradingStore()
   const [orderType, setOrderType] = useState<
     'market' | 'limit'
   >('market')
@@ -97,31 +114,28 @@ export default function TradeSection() {
         data-name="selects"
         data-node-id="1620:662"
       >
-        <div
-          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0"
+        <button
+          onClick={() => setIsMarginModeModalOpen(true)}
+          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0 transition-colors hover:bg-stone-800"
           data-name="select"
           data-node-id="1651:1855"
         >
-          <button
-            onClick={() => setMarginMode('isolated')}
-            className={`text-xs font-medium leading-normal ${
-              marginMode === 'isolated'
-                ? 'text-white'
-                : 'text-white/60'
-            }`}
-          >
-            Isolated
-          </button>
-        </div>
-        <div
-          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0"
+          <p className="text-xs font-medium leading-normal text-white">
+            {marginMode === 'isolated'
+              ? 'Isolated'
+              : 'Cross'}
+          </p>
+        </button>
+        <button
+          onClick={() => setIsLeverageModalOpen(true)}
+          className="flex h-8 min-h-0 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg bg-stone-900 px-3 py-0 transition-colors hover:bg-stone-800"
           data-name="select"
           data-node-id="1651:1848"
         >
           <p className="text-xs font-medium leading-normal text-white">
             {leverage}x
           </p>
-        </div>
+        </button>
       </div>
 
       {/* Market/Limit 탭 */}
@@ -356,6 +370,53 @@ export default function TradeSection() {
             : 'Sell / Short'}
         </p>
       </button>
+
+      {/* Modals */}
+      <MarginModeModal
+        open={isMarginModeModalOpen}
+        onOpenChange={setIsMarginModeModalOpen}
+        currentMode={marginMode}
+        onConfirm={(mode) => {
+          setMarginMode(mode)
+        }}
+      />
+
+      <LeverageModal
+        open={isLeverageModalOpen}
+        onOpenChange={setIsLeverageModalOpen}
+        currentLeverage={leverage}
+        minLeverage={1}
+        maxLeverage={10}
+        onConfirm={(newLeverage) => {
+          setLeverage(newLeverage)
+        }}
+      />
+
+      <ClosePositionLimitModal
+        open={isClosePositionLimitModalOpen}
+        onOpenChange={setIsClosePositionLimitModalOpen}
+        currentPrice={4.7876}
+        positionSize={100}
+        onConfirm={(limitPrice, orderSize) => {
+          console.log('Close Position (Limit):', {
+            limitPrice,
+            orderSize,
+          })
+        }}
+      />
+
+      <ClosePositionMarketModal
+        open={isClosePositionMarketModalOpen}
+        onOpenChange={setIsClosePositionMarketModalOpen}
+        marketPrice={4.7876}
+        positionSize={100}
+        estimatedSlippage={-3.6001}
+        onConfirm={(orderSize) => {
+          console.log('Close Position (Market):', {
+            orderSize,
+          })
+        }}
+      />
     </div>
   )
 }

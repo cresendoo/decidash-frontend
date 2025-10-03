@@ -74,25 +74,34 @@ const columns: TableColumn[] = [
     label: 'Entry Price',
     align: 'right',
   },
-  { key: 'markPrice', label: 'Mark Price', align: 'right' },
+  {
+    key: 'markPrice',
+    label: 'Mark Price',
+    align: 'right',
+    tooltip:
+      'Used for margining, computing unrealized PnL and liquidations.',
+  },
   {
     key: 'pnl',
     label: 'PNL (ROE %)',
     align: 'right',
-    underline: true,
+    tooltip:
+      'Mark Price is used to estimate unrealized PnL. Only trade prices are used for realized PnL.',
   },
   { key: 'liqPrice', label: 'Liq. Price', align: 'right' },
   {
     key: 'margin',
     label: 'Margin',
     align: 'right',
-    underline: true,
+    tooltip:
+      'For isolated positions margin includes unrealized PnL.',
   },
   {
     key: 'funding',
     label: 'Funding',
     align: 'right',
-    underline: true,
+    tooltip:
+      'Net funding payments since the position was opened.',
   },
 ]
 

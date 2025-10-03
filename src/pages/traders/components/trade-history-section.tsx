@@ -77,7 +77,7 @@ const columns: TableColumn[] = [
     key: 'closedPnl',
     label: 'Closed PNL',
     align: 'right',
-    underline: true,
+    tooltip: 'Closed PNL includes fee and rebates.',
   },
 ]
 

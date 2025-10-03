@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 import {
   type MarketWithPrice,
   useMarketsWithPrices,
@@ -24,6 +26,45 @@ export default function MarketListPanel({
 
   const { data: markets = [], isLoading } =
     useMarketsWithPrices()
+
+  console.log(markets)
+
+  const sortedMarkets = useMemo(() => {
+    const prioritySymbols = [
+      'BTC',
+      'SOL',
+      'ETH',
+      'APT',
+      'APTOS',
+    ]
+
+    const getBaseSymbol = (name: string): string => {
+      const base = name.split('/')[0] ?? name
+      const parts = base.split('.')
+      const symbol = parts[parts.length - 1] ?? base
+      return symbol.toUpperCase()
+    }
+
+    const getPriorityScore = (name: string): number => {
+      const symbol = getBaseSymbol(name)
+      const normalized = symbol === 'APTOS' ? 'APT' : symbol
+      const idx = prioritySymbols.indexOf(normalized)
+      return idx === -1 ? Number.POSITIVE_INFINITY : idx
+    }
+
+    return [...markets].sort((a, b) => {
+      const pa = getPriorityScore(a.market_name)
+      const pb = getPriorityScore(b.market_name)
+      if (pa !== pb) return pa - pb
+      const volumeCompare =
+        (b.volume24h ?? 0) - (a.volume24h ?? 0)
+      if (volumeCompare !== 0) return volumeCompare
+      const oiCompare =
+        (b.openInterest ?? 0) - (a.openInterest ?? 0)
+      if (oiCompare !== 0) return oiCompare
+      return a.market_name.localeCompare(b.market_name)
+    })
+  }, [markets])
 
   const handleMarketSelect = (marketName: string) => {
     setSelectedMarket(marketName)
@@ -104,66 +145,71 @@ export default function MarketListPanel({
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
-              {markets.map((market: MarketWithPrice) => {
-                const isSelected =
-                  market.market_name === selectedMarket
-                const priceChange =
-                  market.priceChangePercent24h || 0
-                const priceColor =
-                  priceChange >= 0
-                    ? 'text-[#00c951]'
-                    : 'text-[#fb2c36]'
+              {sortedMarkets.map(
+                (market: MarketWithPrice) => {
+                  const isSelected =
+                    market.market_name === selectedMarket
+                  const priceChange =
+                    market.priceChangePercent24h || 0
+                  const priceColor =
+                    priceChange >= 0
+                      ? 'text-[#00c951]'
+                      : 'text-[#fb2c36]'
 
-                return (
-                  <button
-                    key={market.market_name}
-                    onClick={() =>
-                      handleMarketSelect(market.market_name)
-                    }
-                    className={`flex h-12 w-full items-center justify-between rounded-xl px-3 transition-colors hover:bg-white/5 ${
-                      isSelected
-                        ? 'bg-white/10'
-                        : 'bg-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {/* 마켓 아이콘 */}
-                      <div
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${getMarketColor(market.market_name)} text-[10px] font-bold text-white`}
-                      >
-                        {market.market_name.charAt(0)}
-                      </div>
-                      <p className="text-[14px] font-medium text-white">
-                        {market.market_name}
-                      </p>
-                    </div>
-
-                    {/* 가격 및 변동률 */}
-                    <div className="flex flex-col items-end gap-0.5">
-                      <p
-                        className={`text-[13px] font-medium ${
-                          market.currentPrice !== undefined
-                            ? priceColor
-                            : 'text-white/40'
-                        }`}
-                      >
-                        {formatPrice(market.currentPrice)}
-                      </p>
-                      {/* 24h 변동률이 있을 때만 표시 */}
-                      {market.priceChangePercent24h !==
-                        undefined && (
-                        <p
-                          className={`text-[11px] font-medium ${priceColor}`}
+                  return (
+                    <button
+                      key={market.market_name}
+                      onClick={() =>
+                        handleMarketSelect(
+                          market.market_name,
+                        )
+                      }
+                      className={`flex h-12 w-full items-center justify-between rounded-xl px-3 transition-colors hover:bg-white/5 ${
+                        isSelected
+                          ? 'bg-white/10'
+                          : 'bg-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {/* 마켓 아이콘 */}
+                        <div
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${getMarketColor(market.market_name)} text-[10px] font-bold text-white`}
                         >
-                          {formatChangePercent(
-                            market.priceChangePercent24h,
-                          )}
+                          {market.market_name.charAt(0)}
+                        </div>
+                        <p className="text-[14px] font-medium text-white">
+                          {market.market_name}
                         </p>
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
+                      </div>
+
+                      {/* 가격 및 변동률 */}
+                      <div className="flex flex-col items-end gap-0.5">
+                        <p
+                          className={`text-[13px] font-medium ${
+                            market.currentPrice !==
+                            undefined
+                              ? priceColor
+                              : 'text-white/40'
+                          }`}
+                        >
+                          {formatPrice(market.currentPrice)}
+                        </p>
+                        {/* 24h 변동률이 있을 때만 표시 */}
+                        {market.priceChangePercent24h !==
+                          undefined && (
+                          <p
+                            className={`text-[11px] font-medium ${priceColor}`}
+                          >
+                            {formatChangePercent(
+                              market.priceChangePercent24h,
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  )
+                },
+              )}
             </div>
           )}
         </div>
@@ -208,7 +254,7 @@ export default function MarketListPanel({
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
           </div>
         ) : (
-          markets.map((market: MarketWithPrice) => {
+          sortedMarkets.map((market: MarketWithPrice) => {
             const isSelected =
               market.market_name === selectedMarket
             const priceChange =
