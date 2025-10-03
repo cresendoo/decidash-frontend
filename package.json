@@ -15,7 +15,7 @@
   "dependencies": {
     "@aptos-labs/ts-sdk": "^5.1.0",
     "@aptos-labs/wallet-adapter-react": "^7.1.0",
-    "@coldbell/decidash-ts-sdk": "^1.15.0",
+    "@coldbell/decidash-ts-sdk": "^1.16.1",
     "@tanstack/react-query": "^5.87.1",
     "clsx": "^2.1.1",
     "lightweight-charts": "^5.0.8",

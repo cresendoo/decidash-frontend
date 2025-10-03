@@ -17,6 +17,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target:
+          'https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   build: {
     target: 'esnext',
     minify: 'esbuild',
